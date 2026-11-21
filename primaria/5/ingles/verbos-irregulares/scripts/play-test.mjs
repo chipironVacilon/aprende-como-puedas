@@ -176,7 +176,7 @@ const home = await evaluate(`(() => ({
     pressed: node.getAttribute('aria-pressed')
   }))
 }))()`);
-check(home.modes === 5, "el inicio ofrece 5 modos", `encontrados ${home.modes}`);
+check(home.modes === 6, "el inicio ofrece 6 modos", `encontrados ${home.modes}`);
 check(
   home.arcadeCard.includes("Arcade"),
   "el inicio ofrece el arcade del marcianito",
@@ -663,9 +663,226 @@ async function playRound(mode, { correctCount }) {
   return expectedScore;
 }
 
+/* ------------------------------------------------------------ escribir ---- */
+
+/**
+ * The writing mode has nothing to click: the answer is typed. The round must
+ * accept what a child types, say the word and its sentence out loud once the
+ * answer is in, and refuse an empty box instead of spending the question.
+ */
+async function playWriteRound({ correctCount }) {
+  await evaluate("location.hash = ''");
+  await evaluate("document.querySelector('[data-action=home]').click()");
+  await waitFor("!!document.querySelector('.mode')", "volver al inicio");
+
+  const card = await evaluate(
+    "(document.querySelector('[data-mode=write] b') || {}).textContent || ''"
+  );
+  check(card.length > 0, "el menú ofrece el modo de escribir", card);
+
+  await evaluate("document.querySelector('[data-mode=write]').click()");
+  await waitFor(
+    "IVG.state.round && IVG.state.round.mode === 'write' && IVG.state.view === 'play'",
+    "arranca el modo escribir"
+  );
+
+  const total = await evaluate("IVG.state.round.items.length");
+  check(total === 10, "escribir: la ronda tiene 10 preguntas", `${total}`);
+
+  // What the mode asks to play is the point of the mode: listen to the request.
+  await evaluate(`(() => {
+    window.__said = [];
+    window.__sayReal = IVG.player.say;
+    IVG.player.say = (clips, text) => {
+      window.__said.push({ clips: (clips || []).map((entry) => entry.clip || entry), text });
+      return window.__sayReal.call(IVG.player, clips, text);
+    };
+    return true;
+  })()`);
+
+  let expectedScore = 0;
+  let formQuestions = 0;
+  let sentenceQuestions = 0;
+  const missed = [];
+
+  for (let question = 0; question < total; question += 1) {
+    const snapshot = JSON.parse(
+      await evaluate(`(() => {
+        const round = IVG.state.round;
+        const item = round.items[round.index];
+        return JSON.stringify({
+          base: item.verb.base,
+          form: item.form,
+          correct: item.correct,
+          accepted: item.accepted,
+          hasSentence: typeof item.sentence === 'string',
+          sentence: item.sentence || '',
+          en: (item.example || {}).en || '',
+          renderedSentence: (document.querySelector('.sentence') || {}).textContent || '',
+          prompt: document.querySelector('.prompt h2').textContent,
+          optionCount: document.querySelectorAll('.option').length,
+          inputCount: document.querySelectorAll('[data-role=write-input]').length,
+          focused: document.activeElement === document.querySelector('[data-role=write-input]')
+        });
+      })()`)
+    );
+
+    if (snapshot.hasSentence) sentenceQuestions += 1;
+    else formQuestions += 1;
+
+    check(snapshot.optionCount === 0, "escribir: no hay opciones que pulsar", `${snapshot.optionCount}`);
+    check(snapshot.inputCount === 1, "escribir: hay una casilla para escribir", `${snapshot.inputCount}`);
+    check(snapshot.focused, "escribir: la casilla recibe el cursor");
+    check(
+      snapshot.accepted.length > 0 && snapshot.accepted.every((word) => typeof word === "string" && word.length > 0),
+      "escribir: la pregunta sabe qué respuestas valen",
+      JSON.stringify(snapshot.accepted)
+    );
+    if (snapshot.hasSentence) {
+      check(
+        snapshot.sentence.includes("____") && snapshot.renderedSentence.includes("?"),
+        "escribir: la frase muestra el hueco",
+        snapshot.renderedSentence
+      );
+      check(
+        snapshot.en.toLowerCase().includes(snapshot.correct.toLowerCase()),
+        "escribir: el hueco es una forma del verbo",
+        `${snapshot.correct} en ${snapshot.en}`
+      );
+    } else {
+      check(snapshot.renderedSentence.length === 0, "escribir: la pregunta de forma no trae frase");
+      check(snapshot.prompt.length > 8, "escribir: la pregunta de forma dice qué escribir", snapshot.prompt);
+    }
+    if (question === 0) await shot("03-write-pregunta");
+
+    // A stray Enter on an empty box must not spend the question.
+    const before = await evaluate("IVG.state.round.score");
+    await evaluate(`(() => {
+      document.querySelector('[data-role=write-input]').value = '   ';
+      document.querySelector('[data-action=check]').click();
+      return true;
+    })()`);
+    const empty = JSON.parse(
+      await evaluate(`(() => JSON.stringify({
+        answered: !!IVG.state.round.answered,
+        score: IVG.state.round.score,
+        hasFeedback: !!document.querySelector('.feedback')
+      }))()`)
+    );
+    check(!empty.answered && !empty.hasFeedback, "escribir: una casilla vacía no responde", JSON.stringify(empty));
+    check(empty.score === before, "escribir: lo vacío no cambia la puntuación", `${empty.score}`);
+
+    const wantsRight = question < correctCount;
+    // A child's keyboard: capitals, a spare space and a full stop still count.
+    const typed = wantsRight ? ` ${snapshot.accepted[snapshot.accepted.length - 1].toUpperCase()} ` : "zzz";
+
+    await evaluate(`(() => {
+      document.querySelector('[data-role=write-input]').value = ${JSON.stringify(typed)};
+      document.querySelector('[data-action=check]').click();
+      return true;
+    })()`);
+
+    const after = JSON.parse(
+      await evaluate(`(() => {
+        const round = IVG.state.round;
+        const field = document.querySelector('[data-role=write-input]');
+        return JSON.stringify({
+          score: round.score,
+          streak: round.streak,
+          feedback: (document.querySelector('.feedback__head') || {}).textContent || '',
+          written: (document.querySelector('.feedback p') || {}).textContent || '',
+          fieldClass: field ? field.className : '',
+          disabled: field ? field.disabled : false,
+          said: window.__said.length,
+          last: window.__said[window.__said.length - 1] || null,
+          hasTrio: !!document.querySelector('.feedback .trio'),
+          hasTranslation: !!document.querySelector('.feedback .example__es')
+        });
+      })()`)
+    );
+
+    if (wantsRight) {
+      expectedScore += 1;
+      check(after.score === expectedScore, "escribir: suma un acierto", `score ${after.score} ≠ ${expectedScore}`);
+      check(after.feedback.includes("Muy bien"), "escribir: el acierto se celebra", after.feedback);
+      check(after.fieldClass.includes("is-correct"), "escribir: la casilla se pinta de acierto", after.fieldClass);
+    } else {
+      missed.push(snapshot.correct);
+      check(after.streak === 0, "escribir: fallar reinicia la racha", `racha ${after.streak}`);
+      check(after.feedback.includes("Casi"), "escribir: el fallo dice cuál era", after.feedback);
+      check(after.fieldClass.includes("is-wrong"), "escribir: la casilla se pinta de fallo", after.fieldClass);
+    }
+
+    check(after.written.includes(typed.trim()), "escribir: la corrección repite lo escrito", after.written);
+    check(after.disabled, "escribir: la casilla se bloquea al responder");
+    check(after.hasTrio, "escribir: la corrección trae las formas del verbo");
+    check(after.hasTranslation, "escribir: la corrección trae traducción");
+
+    // The reason the activity exists: the word and its sentence are said aloud.
+    check(after.said === question + 1, "escribir: cada respuesta pide audio", `${after.said}`);
+    const clips = after.last ? after.last.clips : [];
+    check(clips.length === 2, "escribir: suena la palabra y la frase", JSON.stringify(clips));
+    check(
+      clips[0] === `assets/audio/${snapshot.base}/${snapshot.form}.mp3`,
+      "escribir: primero suena la palabra escrita",
+      `${clips[0]}`
+    );
+    check(
+      clips[1] === `assets/audio/${snapshot.base}/example-1.mp3` ||
+        clips[1] === `assets/audio/${snapshot.base}/example-2.mp3`,
+      "escribir: después suena su frase de ejemplo",
+      `${clips[1]}`
+    );
+    check(
+      clips.every((clip) => existsSync(join(root, clip))),
+      "escribir: los dos audios existen",
+      JSON.stringify(clips.filter((clip) => !existsSync(join(root, clip))))
+    );
+    check(
+      typeof after.last.text === "string" && after.last.text.length > 0,
+      "escribir: hay voz de reserva si falta el audio",
+      `${after.last && after.last.text}`
+    );
+
+    await evaluate("document.querySelector('[data-action=check]')?.click()");
+    const unchanged = await evaluate("IVG.state.round.score");
+    check(unchanged === expectedScore, "escribir: responder dos veces no suma de más", `score ${unchanged}`);
+
+    if (question === 0) await shot("04-write-correccion");
+
+    await evaluate("document.querySelector('[data-action=next]').click()");
+  }
+
+  check(formQuestions > 0 && sentenceQuestions > 0, "escribir: la ronda mezcla formas y frases", `${formQuestions} + ${sentenceQuestions}`);
+
+  const result = JSON.parse(
+    await evaluate(`(() => JSON.stringify({
+      score: document.querySelector('.result__score').textContent,
+      review: (document.querySelector('.result__review') || {}).textContent || '',
+      actions: document.querySelectorAll('.result__actions button').length,
+      replay: document.querySelector('.result__actions [data-mode=write]') ? true : false
+    }))()`)
+  );
+  check(result.score.includes(`${expectedScore}`), "escribir: el resultado cuenta los aciertos", result.score);
+  check(result.actions === 3, "escribir: el resultado ofrece volver a jugar", `${result.actions}`);
+  check(result.replay, "escribir: se puede repetir la ronda");
+  check(missed.length === 0 || result.review.length > 0, "escribir: los fallos aparecen como repaso", result.review);
+
+  // Leave the player exactly as this mode found it.
+  await evaluate(`(() => {
+    IVG.player.stop();
+    if (window.__sayReal) IVG.player.say = window.__sayReal;
+    delete window.__sayReal;
+    return true;
+  })()`);
+
+  return expectedScore;
+}
+
 const quizScore = await playRound("quiz", { correctCount: 8 });
 const gapsScore = await playRound("gaps", { correctCount: 6 });
 const listenScore = await playRound("listen", { correctCount: 10 });
+const writeScore = await playWriteRound({ correctCount: 7 });
 
 const totals = JSON.parse(
   await evaluate(`(() => JSON.stringify({
@@ -677,12 +894,12 @@ const totals = JSON.parse(
   }))()`)
 );
 check(
-  totals.stars === baseline.stars + quizScore + gapsScore + listenScore,
+  totals.stars === baseline.stars + quizScore + gapsScore + listenScore + writeScore,
   "las estrellas se acumulan entre rondas",
   JSON.stringify(totals)
 );
 check(totals.stored === totals.stars, "las estrellas se guardan en el navegador", JSON.stringify(totals));
-check(totals.rounds === baseline.rounds + 3, "se cuentan las rondas jugadas", `${totals.rounds}`);
+check(totals.rounds === baseline.rounds + 4, "se cuentan las rondas jugadas", `${totals.rounds}`);
 
 /* --------------------------------------------------------------- arcade ---- */
 
@@ -770,6 +987,7 @@ const cardStars = JSON.parse(
       quiz: count('quiz'),
       gaps: count('gaps'),
       listen: count('listen'),
+      write: count('write'),
       arcade: count('arcade'),
       study: document.querySelectorAll('.mode--study .mode__stars').length,
       labels: [...document.querySelectorAll('.mode__stars')].map((node) => node.getAttribute('aria-label'))
@@ -783,7 +1001,12 @@ check(
 );
 check(cardStars.arcade === 0, "el arcade arranca con 0 estrellas en su tarjeta", `${cardStars.arcade}`);
 check(
-  cardStars.quiz + cardStars.gaps + cardStars.listen + cardStars.arcade === totals.stars,
+  cardStars.write === writeScore,
+  "la tarjeta de escribir cuenta sus estrellas",
+  `${cardStars.write} ≠ ${writeScore}`
+);
+check(
+  cardStars.quiz + cardStars.gaps + cardStars.listen + cardStars.write + cardStars.arcade === totals.stars,
   "las estrellas de las pruebas suman el total de la barra",
   JSON.stringify({ cardStars, total: totals.stars })
 );
@@ -1622,8 +1845,8 @@ check(
   JSON.stringify(migrated)
 );
 check(
-  Object.values(migrated.modeStars).join() === "0,0,0,0" &&
-    migrated.cardStars.join() === "0,0,0,0",
+  Object.values(migrated.modeStars).join() === "0,0,0,0,0" &&
+    migrated.cardStars.join() === "0,0,0,0,0",
   "un perfil sin contadores por prueba arranca a cero, sin inventar estrellas",
   JSON.stringify({ modeStars: migrated.modeStars, cardStars: migrated.cardStars })
 );
@@ -1721,7 +1944,7 @@ check(wiped.stars === 0 && wiped.header === "0", "borrar el progreso deja las es
 check(wiped.streak === 0 && wiped.rounds === 0 && wiped.arcadeBest === 0, "la racha y los récords desaparecen", JSON.stringify(wiped));
 check(wiped.verbs === 0, "las estadísticas de los verbos se borran", `${wiped.verbs} verbos guardados`);
 check(
-  Object.values(wiped.modeStars).join() === "0,0,0,0" && wiped.cardStars.join() === "0,0,0,0",
+  Object.values(wiped.modeStars).join() === "0,0,0,0,0" && wiped.cardStars.join() === "0,0,0,0,0",
   "borrar el progreso deja a cero las estrellas de cada prueba",
   JSON.stringify({ modeStars: wiped.modeStars, cardStars: wiped.cardStars })
 );

@@ -15,6 +15,13 @@ con doble clic.
 - **Completa la frase**: una frase con un hueco, su traducción como pista y cuatro
   formas para elegir.
 - **Escucha y adivina**: se oye el verbo en inglés y hay que reconocerlo entre cuatro.
+- **Escribe la palabra**: sin opciones. La mitad de las preguntas pide teclear una
+  forma del verbo (el pasado, el participio o el infinitivo a partir del
+  significado) y la otra mitad pide escribir la palabra que falta en una frase con
+  su traducción al lado. Se escribe y se pulsa Enter (o **Comprobar**); al acertar
+  o fallar suena la palabra y después su frase de ejemplo, para unir la escritura
+  con la pronunciación. Una casilla vacía no gasta la pregunta, y una respuesta
+  con mayúsculas, espacios de más o punto final cuenta como buena.
 - **Arcade del marcianito**: un laberinto tipo Pac-Man. Arriba aparece un verbo en
   infinitivo y por el laberinto hay cuatro palabras: con las flechas del teclado se
   mueve al marcianito para recoger la que es su **pasado**, esquivando a los

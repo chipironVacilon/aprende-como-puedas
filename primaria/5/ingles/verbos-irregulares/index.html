@@ -21,6 +21,7 @@
     --quiz: #8b7cff;
     --gaps: #22d3ee;
     --listen: #ffb347;
+    --write: #a3e635;
     --arcade: #f472b6;
     --radius: 20px;
     --shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
@@ -311,6 +312,7 @@
   .mode--quiz { --accent: var(--quiz); }
   .mode--gaps { --accent: var(--gaps); }
   .mode--listen { --accent: var(--listen); }
+  .mode--write { --accent: var(--write); }
   .mode--arcade { --accent: var(--arcade); }
 
   /* ---- Arcade (maze mini-game) ---- */
@@ -817,6 +819,42 @@
 
   .option.is-dim { opacity: 0.5; }
 
+  /* ---- Escribir: the answer is typed, not chosen ---- */
+  .write {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  @media (min-width: 560px) {
+    .write { grid-template-columns: 1fr auto; align-items: center; }
+  }
+
+  .write__input {
+    width: 100%;
+    min-height: 62px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: inherit;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .write__input::placeholder { color: var(--muted); font-weight: 600; }
+  .write__input:focus-visible { outline: 3px solid var(--write); outline-offset: 2px; }
+  .write__input.is-correct { border-color: var(--ok); background: rgba(74, 222, 128, 0.16); }
+  .write__input.is-wrong {
+    border-color: var(--bad);
+    background: rgba(251, 113, 133, 0.14);
+    animation: shake 0.3s ease;
+  }
+  .write__input:disabled { opacity: 0.8; }
+  .write .btn { min-height: 62px; }
+
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
@@ -1028,6 +1066,18 @@ function shuffle(list) {
 const formsOf = (value) => String(value).split("/").map((part) => part.trim()).filter(Boolean);
 const firstForm = (value) => formsOf(value)[0];
 
+/**
+ * A typed answer, normalised: neither capitals, stray spaces nor a trailing
+ * full stop should turn a right answer into a wrong one for a 10-year-old.
+ */
+const normalizeWriting = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.,;:!?]+$/, "")
+    .trim();
+
 /** Text a speech engine should say for a written form. */
 function sayForm(verb, form) {
   if (form === "base") return verb.base;
@@ -1040,7 +1090,7 @@ function sayForm(verb, form) {
 
 const STORAGE_KEY = "verbos-irregulares-v1";
 // The tests that award stars. `study` only flips cards, so it never earns one.
-const STAR_MODES = ["quiz", "gaps", "listen", "arcade"];
+const STAR_MODES = ["quiz", "gaps", "listen", "write", "arcade"];
 
 /** A brand-new profile. Every nested object is fresh, so callers may mutate it. */
 function emptyProfile() {
@@ -1545,6 +1595,7 @@ const MODES = {
   quiz: { name: "Quiz", icon: "⚡", accent: "var(--quiz)" },
   gaps: { name: "Frases", icon: "✏️", accent: "var(--gaps)" },
   listen: { name: "Escucha", icon: "🎧", accent: "var(--listen)" },
+  write: { name: "Escribe", icon: "⌨️", accent: "var(--write)" },
   arcade: { name: "Arcade", icon: "👾", accent: "var(--arcade)" }
 };
 
@@ -1637,7 +1688,7 @@ function pairExample(verb, form) {
   return verb.examples.find((example) => example.form === form) || verb.examples[0];
 }
 
-function buildQuestion(mode, verb) {
+function buildQuestion(mode, verb, index = 0) {
   const past = pairExample(verb, "past");
   const participle = pairExample(verb, "participle");
   const withParticiple = showsParticiple();
@@ -1677,6 +1728,46 @@ function buildQuestion(mode, verb) {
     };
   }
 
+  // write: no options at all, the word is typed. Half the round writes a form
+  // on its own, half writes the word the sentence is missing.
+  if (mode === "write") {
+    if (index % 2 === 1) {
+      const example = !withParticiple || Math.random() < 0.5 ? past : participle;
+      return {
+        verb,
+        form: example.form,
+        prompt: "Escribe la palabra que falta",
+        sub: example.form === "past" ? "Usa el pasado simple" : "Usa el participio (con have / has)",
+        sentence: blankSentence(example.en, example.target),
+        correct: example.target,
+        accepted: formsOf(example.target),
+        answerKind: "written",
+        example
+      };
+    }
+
+    const form =
+      withParticiple && verb.participle !== verb.past && Math.random() < 0.4
+        ? "participle"
+        : Math.random() < 0.25
+          ? "base"
+          : "past";
+    const correct = verb[form];
+    return {
+      verb,
+      form,
+      prompt:
+        form === "base"
+          ? `Escribe el <b class="hl">infinitivo</b>`
+          : `Escribe el <b class="hl">${form === "past" ? "pasado" : "participio"}</b> de <b class="hl">${esc(verb.base)}</b>`,
+      sub: form === "base" ? `Significa: “${esc(verb.es)}”` : `«${esc(verb.base)}» significa “${esc(verb.es)}”`,
+      correct,
+      accepted: formsOf(correct),
+      answerKind: "written",
+      example: form === "participle" ? participle : past
+    };
+  }
+
   // listen: hear a form, then choose the verb
   const form = withParticiple && verb.participle !== verb.past && Math.random() < 0.4 ? "participle" : "past";
   const spokenLabel = sayForm(verb, form);
@@ -1705,7 +1796,7 @@ function startRound(mode) {
   state.round = {
     mode,
     level: profile.level,
-    items: verbs.map((verb) => buildQuestion(mode, verb)),
+    items: verbs.map((verb, i) => buildQuestion(mode, verb, i)),
     index: 0,
     score: 0,
     streak: 0,
@@ -1915,6 +2006,18 @@ function renderHome() {
         <span class="mode__go" aria-hidden="true">→</span>
       </button>
 
+      <button class="mode mode--write" data-action="play" data-mode="write">
+        <span class="mode__icon" aria-hidden="true">⌨️</span>
+        <span class="mode__body">
+          <b>Escribe la palabra</b>
+          <small>${withParticiple
+            ? "Sin opciones: teclea el pasado, el participio o la palabra que falta en la frase. Al comprobar, se oye."
+            : "Sin opciones: teclea el pasado o la palabra que falta en la frase. Al comprobar, se oye."}</small>
+        </span>
+        ${modeStarsBadge("write")}
+        <span class="mode__go" aria-hidden="true">→</span>
+      </button>
+
       <button class="mode mode--arcade" data-action="play" data-mode="arcade">
         <span class="mode__icon" aria-hidden="true">👾</span>
         <span class="mode__body">
@@ -2005,6 +2108,58 @@ function renderStudy() {
     </section>`;
 }
 
+/** The typed answer: a big field, a button, and the keyboard. */
+function writeBlock(item, answered) {
+  const typed = answered && typeof answered.text === "string" ? answered.text : "";
+  let classes = "write__input";
+  if (answered) classes += answered.right ? " is-correct" : " is-wrong";
+  return `<div class="write">
+      <input id="write-input" class="${classes}" data-role="write-input" type="text" lang="en"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+             placeholder="Escribe aquí…" aria-label="Tu respuesta en inglés"
+             value="${esc(typed)}" ${answered ? "disabled" : ""} />
+      <button class="btn btn--primary" data-action="check" ${answered ? "disabled" : ""}>Comprobar</button>
+    </div>`;
+}
+
+/** The top of the question: what it asks and what it shows. */
+function promptBlockFor(round, item, answered) {
+  if (round.mode === "gaps") {
+    return `<h2>${item.prompt}</h2>
+         <p class="sentence" lang="en">${
+           answered
+             ? esc(item.sentence).replace("____", `<mark>${esc(item.correct)}</mark>`)
+             : esc(item.sentence).replace("____", '<span class="blank">?</span>')
+         }</p>
+         <p class="prompt__sub">${item.sub}</p>
+         <p class="translation">${esc(item.example.es)}</p>`;
+  }
+  if (round.mode === "listen") {
+    return `<h2>${item.prompt}</h2>
+           <div class="listen-box">
+             ${speakerButton(item.heard, "el verbo otra vez", "speak--big speak--listening", clipEntry(item.verb, item.form))}
+             <p>Escucha y elige el verbo</p>
+           </div>`;
+  }
+  if (round.mode === "write") {
+    return `<h2>${item.prompt}</h2>
+         ${
+           item.sentence
+             ? `<p class="sentence" lang="en">${
+                 answered
+                   ? esc(item.sentence).replace("____", `<mark>${esc(item.correct)}</mark>`)
+                   : esc(item.sentence).replace("____", '<span class="blank">?</span>')
+               }</p>
+         <p class="translation">${esc(item.example.es)}</p>`
+             : ""
+         }
+         <p class="prompt__sub">${item.sub}</p>
+         ${answered ? "" : `<p class="prompt__sub">Escribe la respuesta y pulsa Enter.</p>`}`;
+  }
+  return `<h2>${item.prompt}</h2>
+           <p class="prompt__sub">${item.sub}</p>`;
+}
+
 function renderRound() {
   const round = state.round;
   if (!round) { state.view = "home"; renderHome(); return; }
@@ -2013,7 +2168,7 @@ function renderRound() {
 
   const item = round.items[round.index];
   const answered = round.answered;
-  const isRight = answered && answered.index === item.options.indexOf(item.correct);
+  const isRight = Boolean(answered && answered.right);
   const trioRows = formRows(item.verb);
   const trioEntries = formEntries(item.verb);
 
@@ -2026,7 +2181,7 @@ function renderRound() {
     })
     .join("");
 
-  const options = item.options
+  const options = (item.options || [])
     .map((option, i) => {
       let classes = "option";
       if (answered) {
@@ -2042,24 +2197,14 @@ function renderRound() {
     })
     .join("");
 
-  const promptBlock =
-    round.mode === "gaps"
-      ? `<h2>${item.prompt}</h2>
-         <p class="sentence" lang="en">${
-           answered
-             ? esc(item.sentence).replace("____", `<mark>${esc(item.correct)}</mark>`)
-             : esc(item.sentence).replace("____", '<span class="blank">?</span>')
-         }</p>
-         <p class="prompt__sub">${item.sub}</p>
-         <p class="translation">${esc(item.example.es)}</p>`
-      : round.mode === "listen"
-        ? `<h2>${item.prompt}</h2>
-           <div class="listen-box">
-             ${speakerButton(item.heard, "el verbo otra vez", "speak--big speak--listening", clipEntry(item.verb, item.form))}
-             <p>Escucha y elige el verbo</p>
-           </div>`
-        : `<h2>${item.prompt}</h2>
-           <p class="prompt__sub">${item.sub}</p>`;
+  const promptBlock = promptBlockFor(round, item, answered);
+  const answerBlock =
+    round.mode === "write" ? writeBlock(item, answered) : `<div class="options">${options}</div>`;
+
+  const written =
+    round.mode === "write" && answered && typeof answered.text === "string"
+      ? `<p>Has escrito: <b lang="en">${esc(answered.text)}</b></p>`
+      : "";
 
   const feedback = answered
     ? `<div class="feedback ${isRight ? "feedback--ok" : "feedback--bad"}" role="status">
@@ -2067,6 +2212,7 @@ function renderRound() {
            <span aria-hidden="true">${isRight ? "✅" : "❌"}</span>
            <span>${isRight ? "¡Muy bien! +1 estrella" : `Casi… la respuesta era «${esc(item.correct)}»`}</span>
          </div>
+         ${written}
          <div class="trio">
            ${trioRows.map((row) => `<span><i>${row.label}</i><b lang="en">${esc(row.value)}</b></span>`).join("")}
            ${speakerButton(
@@ -2098,12 +2244,18 @@ function renderRound() {
 
     <div class="prompt">${promptBlock}</div>
 
-    <div class="options">${options}</div>
+    ${answerBlock}
     ${feedback}`;
 
   if (round.mode === "listen" && !answered) {
     const speaker = view.querySelector(".listen-box .speak");
     if (speaker) speaker.classList.add("speak--listening");
+  }
+
+  // Writing mode lives on the keyboard: the field is ready for the next word.
+  if (round.mode === "write" && !answered) {
+    const field = view.querySelector('[data-role="write-input"]');
+    if (field) field.focus();
   }
 }
 
@@ -2521,15 +2673,15 @@ function speakCurrentIfNeeded() {
   if (round.mode === "listen" && !round.answered) Player.say([clipEntry(item.verb, item.form)], item.heard);
 }
 
-function answer(optionIndex) {
-  const round = state.round;
-  if (!round || round.answered) return;
-  const item = round.items[round.index];
-  const chosen = item.options[optionIndex];
-  if (chosen === undefined) return;
+/** The answers a written question accepts: every variant the verb lists. */
+const acceptedAnswers = (item) => (item.accepted || [item.correct]).map(normalizeWriting);
 
-  const isRight = chosen === item.correct;
-  round.answered = { index: optionIndex, right: isRight };
+/** Scores one answered question: the only place an answer pays or costs a star. */
+function resolveAnswer(item, isRight, record) {
+  const round = state.round;
+  if (!round) return;
+
+  round.answered = record;
   round.answers = round.answers || {};
   round.answers[round.index] = isRight;
   recordAnswer(item.verb, isRight);
@@ -2550,8 +2702,47 @@ function answer(optionIndex) {
   saveProfile();
   render();
 
+  // Right or wrong, writing is a spelling lesson: the word is said out loud and
+  // the sentence shows it in use, from the recorded clips when they exist.
+  if (round.mode === "write") {
+    Player.say(
+      [clipEntry(item.verb, item.form), exampleEntry(item.verb, item.example)],
+      `${sayForm(item.verb, item.form)}. ${item.example.en}`
+    );
+  }
+
   const feedback = view.querySelector(".feedback");
   if (feedback) feedback.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function answer(optionIndex) {
+  const round = state.round;
+  if (!round || round.answered) return;
+  const item = round.items[round.index];
+  const chosen = item.options[optionIndex];
+  if (chosen === undefined) return;
+
+  const isRight = chosen === item.correct;
+  resolveAnswer(item, isRight, { index: optionIndex, right: isRight });
+}
+
+/** Turns whatever is in the box into an answer, or does nothing if it is empty. */
+function checkWritten() {
+  const round = state.round;
+  if (!round || round.answered || round.mode !== "write") return;
+  const item = round.items[round.index];
+  const field = view.querySelector('[data-role="write-input"]');
+  const typed = field ? field.value : "";
+  const written = normalizeWriting(typed);
+
+  // An empty box is not a wrong answer: a stray Enter must not burn a question.
+  if (!written) {
+    if (field) field.focus();
+    return;
+  }
+
+  const isRight = acceptedAnswers(item).includes(written);
+  resolveAnswer(item, isRight, { text: typed.trim(), right: isRight });
 }
 
 function nextQuestion() {
@@ -2657,6 +2848,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "answer") { answer(Number(trigger.dataset.index)); return; }
+  if (action === "check") { checkWritten(); return; }
   if (action === "next") { nextQuestion(); return; }
 });
 
@@ -2674,7 +2866,17 @@ view.addEventListener("input", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.target instanceof Element && event.target.closest("input, textarea")) return;
+  const target = event.target instanceof Element ? event.target : null;
+  // In the writing mode Enter checks what is typed and, once corrected, moves on.
+  if (target && target.closest('[data-role="write-input"]')) {
+    if (event.key === "Enter" && state.round && state.round.mode === "write") {
+      event.preventDefault();
+      if (state.round.answered) nextQuestion();
+      else checkWritten();
+    }
+    return;
+  }
+  if (target && target.closest("input, textarea")) return;
 
   if (state.view === "play" && state.round) {
     const round = state.round;

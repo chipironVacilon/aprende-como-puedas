@@ -13,7 +13,8 @@ Primaria
 └── 5º
     ├── Inglés
     │   └── Verbos irregulares   → Tarjetas, quiz de formas, completa la frase,
-    │                              escucha y adivina y arcade del marcianito
+    │                              escucha y adivina, escribe la palabra y arcade
+    │                              del marcianito
     └── Francés
         └── Colores              → Vacío de momento
 ```
@@ -77,7 +78,7 @@ No hay que compilar nada: los ficheros se editan y se abren tal cual.
 ## La actividad de verbos irregulares
 
 Viene del proyecto `verbos-irregulares` y se conserva tal como era, con sus 61
-verbos, su audio, sus cinco modos de juego y sus pruebas. Su documentación está en
+verbos, su audio, sus seis modos de juego y sus pruebas. Su documentación está en
 `primaria/5/ingles/verbos-irregulares/README.md` y sus comprobaciones se ejecutan
 dentro de esa carpeta:
 
