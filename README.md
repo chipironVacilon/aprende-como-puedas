@@ -19,8 +19,9 @@ Primaria
 ```
 
 La página principal (`index.html`) es el menú: cabecera con el logotipo (un lápiz
-atado con un nudo) y tarjetas desplegables para bajar por el árbol. Cada hoja del
-árbol es una página independiente.
+atado con un nudo), una franja de contexto (`Primaria › 5º`) y una sección por
+asignatura que se pliega y se despliega. Cada actividad es una tarjeta con su
+enlace a una página independiente.
 
 ## Cómo está organizado
 
@@ -39,18 +40,34 @@ el menú sólo guarda un enlace a su `index.html`.
 
 1. Crea la carpeta siguiendo el camino del menú, por ejemplo
    `primaria/5/frances/colores/`, y pon dentro su `index.html` con la actividad.
-2. En el `index.html` de la raíz, dentro de la tarjeta de la asignatura
+2. En el `index.html` de la raíz, dentro de la sección de la asignatura
    correspondiente, cambia la tarjeta "Pronto" por un enlace:
 
    ```html
-   <a class="leaf depth-4 type-fr" href="primaria/5/frances/colores/index.html">
-     <span class="leaf__icon" aria-hidden="true">🎨</span>
-     <span class="leaf__body">
-       <span class="leaf__title">Colores</span>
-       <span class="leaf__meta">Los colores en francés, con audio y juego</span>
+   <a class="activity" href="primaria/5/frances/colores/index.html">
+     <span class="activity__icon" aria-hidden="true">🌈</span>
+     <span class="activity__body">
+       <span class="activity__title">Colores</span>
+       <span class="activity__meta">Los colores en francés, con audio y juego</span>
      </span>
-     <span class="leaf__go">Empezar <span aria-hidden="true">→</span></span>
+     <span class="activity__go">Empezar <span aria-hidden="true">→</span></span>
    </a>
+   ```
+
+   Si añades una asignatura nueva, cópiala entera:
+
+   ```html
+   <details class="subject subject--fr" open>
+     <summary class="subject__head">
+       <span class="subject__icon" aria-hidden="true">🎨</span>
+       <h2 class="subject__title">Francés</h2>
+       <span class="subject__count">1 actividad</span>
+       <span class="subject__chev" aria-hidden="true"></span>
+     </summary>
+     <div class="subject__panel">
+       <div class="activities"><!-- las tarjetas --></div>
+     </div>
+   </details>
    ```
 
 3. Abre el `index.html` de la raíz y comprueba que el enlace lleva a la actividad.

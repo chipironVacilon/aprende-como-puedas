@@ -46,11 +46,11 @@
   :focus-visible {
     outline: 3px solid var(--gold);
     outline-offset: 3px;
-    border-radius: 16px;
+    border-radius: 14px;
   }
 
   .app {
-    width: min(100%, 760px);
+    width: min(100%, 720px);
     margin: 0 auto;
     padding: 22px 16px calc(34px + env(safe-area-inset-bottom));
   }
@@ -61,7 +61,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 22px;
+    margin-bottom: 20px;
   }
 
   .site-header__logo {
@@ -99,157 +99,142 @@
     color: transparent;
   }
 
-  /* ---------- intro ---------- */
-
   .lead {
-    margin: 0 0 20px;
+    margin: 0 0 16px;
     max-width: 52ch;
     color: var(--muted);
     font-size: 0.95rem;
   }
 
-  /* ---------- menu tree ---------- */
+  /* ---------- context: where you are ---------- */
 
-  .tree, .tree ul {
-    list-style: none;
-    margin: 0;
+  .context {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
     padding: 0;
-    display: grid;
-    gap: 10px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
   }
 
-  .tree > li > details > ul,
-  .tree > li > .leaf {
-    margin-top: 10px;
-  }
-
-  /* Nested level: a slim rail carries the depth without a second card. */
-  .tree ul {
-    margin-left: 6px;
-    padding-left: 16px;
-    border-left: 2px solid var(--line);
-  }
-
-  .node {
+  .context__chip {
+    padding: 5px 12px;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: 999px;
     background: var(--card);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    color: #c9d2e6;
+    white-space: nowrap;
   }
 
-  .node[open] { background: var(--card); }
+  .context__sep { color: rgba(255, 255, 255, 0.3); }
 
-  /* The clickable row of the card: one big target, keyboard reachable. */
-  .node__head {
+  /* ---------- subjects ---------- */
+
+  .subjects { display: grid; gap: 4px; }
+
+  .subject { border-top: 1px solid var(--line); }
+  .subject:first-child { border-top: 0; }
+
+  .subject__head {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-height: 62px;
-    padding: 12px 16px;
+    min-height: 56px;
+    margin: 0 -8px;
+    padding: 10px 8px;
+    border-radius: 14px;
     cursor: pointer;
     list-style: none;
-    border-left: 4px solid var(--accent, var(--violet));
     transition: background 0.15s ease;
   }
 
-  .node__head::-webkit-details-marker { display: none; }
-  .node__head::marker { content: ""; }
-  .node__head:hover { background: var(--card-strong); }
+  .subject__head::-webkit-details-marker { display: none; }
+  .subject__head::marker { content: ""; }
+  .subject__head:hover { background: rgba(255, 255, 255, 0.035); }
 
-  .node__body {
+  .subject__icon {
     display: grid;
-    gap: 1px;
-    flex: 1 1 auto;
-    min-width: 0;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--accent, var(--green)) 20%, transparent);
+    font-size: 1.05rem;
   }
 
-  .node__label {
-    font-size: 1.06rem;
+  .subject__title {
+    margin: 0;
+    font-size: 1.2rem;
     font-weight: 800;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
   }
 
-  .node__meta {
-    font-size: 0.84rem;
+  .subject__count {
+    margin-left: auto;
     color: var(--muted);
-  }
-
-  .node__chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: color-mix(in srgb, var(--accent, var(--violet)) 20%, transparent);
-    color: color-mix(in srgb, var(--accent, var(--violet)) 55%, #ffffff);
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 0.82rem;
+    font-weight: 700;
     white-space: nowrap;
-    flex: 0 0 auto;
   }
 
-  .node__chev {
-    width: 10px;
-    height: 10px;
+  .subject__chev {
+    width: 9px;
+    height: 9px;
     flex: 0 0 auto;
-    margin-left: 2px;
     border-right: 2px solid var(--muted);
     border-bottom: 2px solid var(--muted);
-    transform: rotate(-45deg) translate(-1px, -1px);
+    transform: rotate(-45deg);
     transition: transform 0.18s ease;
   }
 
-  .node[open] > .node__head .node__chev {
-    transform: rotate(45deg) translate(-2px, -2px);
-  }
+  .subject[open] > .subject__head .subject__chev { transform: rotate(45deg); }
 
-  .node__panel { padding: 0 14px 14px; }
+  .subject__panel { padding: 2px 0 16px; }
 
-  .depth-1 { --accent: var(--violet); }
-  .depth-2 { --accent: var(--cyan); }
-  .depth-3 { --accent: var(--gold); }
-  .depth-4 { --accent: var(--green); }
-  .depth-4.type-fr { --accent: var(--amber); }
+  .subject--en { --accent: var(--green); }
+  .subject--fr { --accent: var(--amber); }
 
-  /* ---------- leaves ---------- */
+  .activities { display: grid; gap: 10px; }
 
-  .leaf {
+  /* ---------- the one surface: an activity ---------- */
+
+  .activity {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
     border: 1px solid var(--line);
-    border-left: 4px solid var(--accent, var(--green));
     border-radius: 16px;
     background: var(--card);
+    box-shadow: var(--shadow);
     text-decoration: none;
     color: inherit;
   }
 
-  a.leaf { transition: transform 0.15s ease, background 0.15s ease; }
-  a.leaf:hover { background: var(--card-strong); transform: translateY(-2px); }
-  a.leaf:active { transform: translateY(0); }
+  a.activity { transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+  a.activity:hover { background: var(--card-strong); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+  a.activity:active { transform: translateY(0); }
 
-  .leaf__icon {
+  .activity__icon {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     flex: 0 0 auto;
     border-radius: 12px;
     background: color-mix(in srgb, var(--accent, var(--green)) 20%, transparent);
-    font-size: 1.3rem;
+    font-size: 1.15rem;
   }
 
-  .leaf__body { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
-  .leaf__title { font-weight: 800; font-size: 1.02rem; }
-  .leaf__meta { font-size: 0.84rem; color: var(--muted); }
+  .activity__body { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
+  .activity__title { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+  .activity__meta { font-size: 0.84rem; color: var(--muted); }
 
-  .leaf__go {
+  .activity__go {
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -263,26 +248,25 @@
     white-space: nowrap;
   }
 
-  .leaf--soon {
+  .activity--soon {
     border-style: dashed;
-    border-left-style: solid;
+    box-shadow: none;
     background: rgba(255, 255, 255, 0.025);
   }
 
-  .leaf--soon .leaf__icon {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--muted);
+  .activity--soon .activity__icon {
+    background: rgba(255, 255, 255, 0.07);
   }
 
-  .leaf--soon .leaf__title { color: #c9d2e6; }
+  .activity--soon .activity__title { color: #d5dcef; }
 
-  .tag-soon {
+  .activity__tag {
     flex: 0 0 auto;
     padding: 6px 12px;
-    border-radius: 999px;
     border: 1px solid var(--line);
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
-    color: var(--muted);
+    color: #b9c4dd;
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.09em;
@@ -302,15 +286,16 @@
   .site-footer p { margin: 0; }
 
   @media (max-width: 460px) {
-    /* Narrow screens: keep the rails but give the content its width back. */
-    .tree ul { margin-left: 2px; padding-left: 10px; }
-    .node__panel { padding: 0 10px 10px; }
-    .leaf { flex-wrap: wrap; padding: 12px; }
-    .leaf__body { flex-basis: calc(100% - 56px); }
-    .leaf__go { margin-left: 56px; flex: 1 1 auto; justify-content: center; }
-    .tag-soon { margin-left: 56px; }
-    .node__head { gap: 10px; padding: 12px 12px; }
-    .node__chip { display: none; }
+    .activity { flex-wrap: wrap; padding: 12px 12px 14px; }
+    .activity__body { flex-basis: calc(100% - 52px); }
+    .activity__go {
+      margin-left: 52px;
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    .activity__tag { margin-left: 52px; }
+    .subject__head { gap: 10px; padding: 10px 6px; margin: 0 -6px; }
+    .subject__title { font-size: 1.1rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -333,87 +318,58 @@
   </header>
 
   <main>
-    <p class="lead">Elige el curso, la asignatura y la actividad. Toca cada tarjeta para desplegarla o plegarla: todo se abre aquí mismo, sin instalar nada ni tener conexión.</p>
+    <p class="lead">Elige la asignatura y la actividad. Todo se abre aquí, en el navegador, sin instalar nada ni tener conexión.</p>
 
-    <nav aria-label="Contenidos por curso">
-      <ul class="tree">
-        <li>
-          <details class="node depth-1" open>
-            <summary class="node__head">
-              <span class="node__chip">Curso</span>
-              <span class="node__body">
-                <span class="node__label">Primaria</span>
-                <span class="node__meta">De 6 a 12 años</span>
+    <p class="context" aria-label="Curso actual">
+      <span class="context__chip">Primaria</span>
+      <span class="context__sep" aria-hidden="true">›</span>
+      <span class="context__chip">5º</span>
+    </p>
+
+    <nav class="subjects" aria-label="Asignaturas">
+
+      <details class="subject subject--en" open>
+        <summary class="subject__head">
+          <span class="subject__icon" aria-hidden="true">✏️</span>
+          <h2 class="subject__title">Inglés</h2>
+          <span class="subject__count">1 actividad</span>
+          <span class="subject__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="subject__panel">
+          <div class="activities">
+            <a class="activity" href="primaria/5/ingles/verbos-irregulares/index.html">
+              <span class="activity__icon" aria-hidden="true">🔤</span>
+              <span class="activity__body">
+                <span class="activity__title">Verbos irregulares</span>
+                <span class="activity__meta">61 verbos · tarjetas, quiz, frases, escucha y arcade</span>
               </span>
-              <span class="node__chev" aria-hidden="true"></span>
-            </summary>
-            <div class="node__panel">
-              <ul>
-                <li>
-                  <details class="node depth-2" open>
-                    <summary class="node__head">
-                      <span class="node__chip">Nivel</span>
-                      <span class="node__body">
-                        <span class="node__label">5º</span>
-                        <span class="node__meta">Dos asignaturas</span>
-                      </span>
-                      <span class="node__chev" aria-hidden="true"></span>
-                    </summary>
-                    <div class="node__panel">
-                      <ul>
-                        <li>
-                          <details class="node depth-3" open>
-                            <summary class="node__head">
-                              <span class="node__chip">Asignatura</span>
-                              <span class="node__body">
-                                <span class="node__label">Inglés</span>
-                                <span class="node__meta">Una actividad</span>
-                              </span>
-                              <span class="node__chev" aria-hidden="true"></span>
-                            </summary>
-                            <div class="node__panel">
-                              <a class="leaf depth-4" href="primaria/5/ingles/verbos-irregulares/index.html">
-                                <span class="leaf__icon" aria-hidden="true">✏️</span>
-                                <span class="leaf__body">
-                                  <span class="leaf__title">Verbos irregulares</span>
-                                  <span class="leaf__meta">61 verbos · tarjetas, quiz, frases, escucha y arcade</span>
-                                </span>
-                                <span class="leaf__go">Empezar <span aria-hidden="true">→</span></span>
-                              </a>
-                            </div>
-                          </details>
-                        </li>
-                        <li>
-                          <details class="node depth-3 type-fr" open>
-                            <summary class="node__head">
-                              <span class="node__chip">Asignatura</span>
-                              <span class="node__body">
-                                <span class="node__label">Francés</span>
-                                <span class="node__meta">Una actividad, todavía vacía</span>
-                              </span>
-                              <span class="node__chev" aria-hidden="true"></span>
-                            </summary>
-                            <div class="node__panel">
-                              <div class="leaf leaf--soon depth-4 type-fr">
-                                <span class="leaf__icon" aria-hidden="true">🎨</span>
-                                <span class="leaf__body">
-                                  <span class="leaf__title">Colores</span>
-                                  <span class="leaf__meta">Todavía no hay actividades. Llegarán pronto.</span>
-                                </span>
-                                <span class="tag-soon">Pronto</span>
-                              </div>
-                            </div>
-                          </details>
-                        </li>
-                      </ul>
-                    </div>
-                  </details>
-                </li>
-              </ul>
+              <span class="activity__go">Empezar <span aria-hidden="true">→</span></span>
+            </a>
+          </div>
+        </div>
+      </details>
+
+      <details class="subject subject--fr" open>
+        <summary class="subject__head">
+          <span class="subject__icon" aria-hidden="true">🎨</span>
+          <h2 class="subject__title">Francés</h2>
+          <span class="subject__count">Pronto</span>
+          <span class="subject__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="subject__panel">
+          <div class="activities">
+            <div class="activity activity--soon">
+              <span class="activity__icon" aria-hidden="true">🌈</span>
+              <span class="activity__body">
+                <span class="activity__title">Colores</span>
+                <span class="activity__meta">Todavía no hay actividades. Llegarán pronto.</span>
+              </span>
+              <span class="activity__tag">Pronto</span>
             </div>
-          </details>
-        </li>
-      </ul>
+          </div>
+        </div>
+      </details>
+
     </nav>
   </main>
 

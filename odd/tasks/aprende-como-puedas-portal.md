@@ -41,6 +41,18 @@ S5. "Las demás entradas están vacías de momento." — Las entradas sin conten
     "Francés › Colores") aparecen en el menú pero no llevan a ninguna página: se ven
     como no disponibles y explican que llegarán pronto.
 
+S6. "el logotipo parece una caca de perro. Intenta mejorarlo." — El logotipo anterior
+    (un anillo grueso con una punta diminuta) no se leía como un lápiz. El nuevo tiene
+    que leerse como un lápiz de verdad (caña amarilla, punta afilada con madera y
+    mina, virola y goma) y además como un nudo, con el hueco del cruce visible.
+
+S7. "El menú principal con tanto anidado, queda poco elegante. Intenta reformarlo con
+    criterio" — El menú deja de ser un árbol de tarjetas dentro de tarjetas: una sola
+    superficie con borde (la tarjeta de actividad), las asignaturas como secciones con
+    su título y su raya, sin raíles ni sangría acumulada, y el curso y el nivel como
+    una franja de contexto compacta. Tiene que seguir funcionando con teclado, con
+    lector de pantalla y sin JavaScript, y seguir plegando y desplegando.
+
 ## Tasks
 
 | ID | Tarea | Specs | Ruta | Commit |
@@ -49,6 +61,8 @@ S5. "Las demás entradas están vacías de momento." — Las entradas sin conten
 | T2 | Diseñar el logotipo SVG del lápiz anudado, verificándolo visualmente, y usarlo también como favicon | S2 | inline | — |
 | T3 | Escribir el `index.html` del portal: header con logo + nombre, menú de tarjetas desplegables y enlace al juego | S2, S3, S4, S5 | inline | — |
 | T4 | README de la web nueva y verificación final: enlaces, rutas relativas, móvil, teclado y que el juego copiado funciona | S1, S3, S4, S5 | inline | — |
+| T5 | Rehacer el logotipo para que se lea como un lápiz y como un nudo, verificado como imagen a 128/64/48/32/20/16 px | S2, S6 | inline | hecho |
+| T6 | Reformar el menú: una sola superficie con borde, asignaturas como secciones, curso y nivel en una franja de contexto | S3, S5, S7 | inline | hecho |
 
 ## Log
 
@@ -114,3 +128,27 @@ puedas learning site`. El remoto tiene 328 ficheros y ningún `node_modules`, `.
 fichero de intercambio ni repositorio anidado. La revisión nativa de la rebanada nueva se
 evaluó antes de empujar: `nativeRisk: medium`, 8 rutas, 650 líneas, `reviewDue: false`
 (`under_budget`), así que no hizo falta revisión.
+
+L10 (petición del usuario, literal): «el logotipo parece una caca de perro. Intenta
+mejorarlo. El menú principal con tanto anidado, queda poco elegante. Intenta reformarlo
+con criterio».
+
+L11 (evidencia, T5): el logotipo anterior era un anillo de grosor constante con una punta
+diminuta: se leía como un rollo, no como un lápiz. Se rehízo con anatomía de lápiz (caña
+dorada, virola metálica, goma rosa, cono de madera y mina), caña más fina que el bucle
+para que el hueco del nudo se vea, y el extremo con goma saliendo por encima del bucle.
+Revisado como imagen a 200/128/64/48/32/20/16 px y montado en la cabecera a tamaño real.
+Se descartaron tres variantes (nudo quebrado, lazo con los dos extremos del mismo lado y
+bucle con boca abierta): las tres se leían como una letra o como un anillo roto.
+
+L12 (evidencia, T6): el menú se reformó a una sola superficie con borde. Fuera el árbol de
+tres tarjetas anidadas, los raíles laterales y la sangría acumulada; dentro una franja de
+contexto (`Primaria › 5º`, etiqueta y no control), una sección por asignatura con su `<h2>`
+y su raya de separación (plegable con `<details>`, sin caja) y, debajo, la tarjeta de la
+actividad como único elemento con borde. Verificado con capturas a 900 y 390 px y con 18
+comprobaciones en Chromium por CDP: dos secciones, ambas abiertas y plegables con clic
+real, `summary` enfocable, el panel sin borde ni fondo, cero restos de `.tree`/`.node`/
+`.leaf`, la tarjeta dentro de su panel, el degradado del botón intacto, el enlace navega
+al juego y ningún error de consola. La delegación al worker estaba bloqueada por el arnés
+(«Writer session Git authority changed before admission», por haber creado el repositorio
+a mitad de sesión), así que T6 se hizo inline.
