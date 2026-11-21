@@ -92,11 +92,25 @@ irregulares» y «Colores», clic real sobre la tarjeta que pliega y despliega, 
 enfocable por teclado, enlace que navega al juego copiado y audio del juego que resuelve
 desde la ruta anidada, sin errores de consola. Capturas revisadas a 900px y 390px.
 
-L7 (decisión, pendiente del usuario): la actividad copiada se identifica como «INGLÉS · 6º
-DE PRIMARIA» en su propia cabecera, mientras que el menú la coloca en 5º porque así lo
-pedía la petición. Se deja el juego intacto y se pregunta.
+L7 (resuelto): la actividad copiada decía «INGLÉS · 6º DE PRIMARIA» en su cabecera, su
+`<title>` y su README. El usuario confirmó que la etiqueta correcta es 5º y que el error
+venía del proyecto antiguo. Se corrigieron las cuatro menciones en la copia y otras
+cuatro en `~/proyectos/verbos-irregulares`, que es de donde salían; ningún ejercicio,
+actividad ni expectativa de las pruebas cambia. `play-test` en la copia tras el cambio:
+«547 comprobaciones OK / Todo verde» (no comprueba la etiqueta).
 
 L8 (estado): la carpeta nueva no es un repositorio git propio; cuelga de
 `/home/pepe/proyectos`, donde todo está sin seguimiento. No se ha creado ningún repo ni
 commit: eso lo decide el usuario. Tampoco se ha tocado `inicio.md`, `.inicio.md.kate-swp`
 ni `.atl/`, que ya estaban en la carpeta.
+
+L9 (resuelto, petición del usuario): «Crea el repo en github y pushea». La carpeta pasó a
+ser su propio repositorio (`git init -b main`, identidad local `José G.
+<45209323+chipironVacilon@users.noreply.github.com>`, `.gitignore` para `node_modules` y
+ruido de editor) y se publicó en https://github.com/chipironVacilon/aprende-como-puedas
+(público, rama `main`). Tres commits: `chore: start the repository`, `chore(actividades):
+add the irregular-verbs activity as the first entry` y `feat(portal): add the Aprende como
+puedas learning site`. El remoto tiene 328 ficheros y ningún `node_modules`, `.atl`,
+fichero de intercambio ni repositorio anidado. La revisión nativa de la rebanada nueva se
+evaluó antes de empujar: `nativeRisk: medium`, 8 rutas, 650 líneas, `reviewDue: false`
+(`under_budget`), así que no hizo falta revisión.
