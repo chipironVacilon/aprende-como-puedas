@@ -775,12 +775,22 @@ async function playWriteRound({ correctCount }) {
     const wantsRight = question < correctCount;
     // A child's keyboard: capitals, a spare space and a full stop still count.
     const typed = wantsRight ? ` ${snapshot.accepted[snapshot.accepted.length - 1].toUpperCase()} ` : "zzz";
+    // Half the round answers with the Enter key, half with the button.
+    const byKeyboard = question % 2 === 0;
 
     await evaluate(`(() => {
-      document.querySelector('[data-role=write-input]').value = ${JSON.stringify(typed)};
-      document.querySelector('[data-action=check]').click();
+      const field = document.querySelector('[data-role=write-input]');
+      field.value = ${JSON.stringify(typed)};
+      if (${byKeyboard}) {
+        field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      } else {
+        document.querySelector('[data-action=check]').click();
+      }
       return true;
     })()`);
+    if (byKeyboard) {
+      check(await evaluate("!!document.querySelector('.feedback')"), "escribir: Enter comprueba lo escrito");
+    }
 
     const after = JSON.parse(
       await evaluate(`(() => {
@@ -815,6 +825,10 @@ async function playWriteRound({ correctCount }) {
 
     check(after.written.includes(typed.trim()), "escribir: la corrección repite lo escrito", after.written);
     check(after.disabled, "escribir: la casilla se bloquea al responder");
+    check(
+      await evaluate("document.activeElement === document.querySelector('[data-action=next]')"),
+      "escribir: al responder el cursor va al botón de seguir"
+    );
     check(after.hasTrio, "escribir: la corrección trae las formas del verbo");
     check(after.hasTranslation, "escribir: la corrección trae traducción");
 
@@ -850,7 +864,24 @@ async function playWriteRound({ correctCount }) {
 
     if (question === 0) await shot("04-write-correccion");
 
-    await evaluate("document.querySelector('[data-action=next]').click()");
+    const indexBefore = await evaluate("IVG.state.round.index");
+    await evaluate(`(() => {
+      if (${byKeyboard}) {
+        // Exactly what a second Enter does: the answer is in, the button has the focus.
+        (document.activeElement || document.body).dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+        );
+      } else {
+        document.querySelector('[data-action=next]').click();
+      }
+      return true;
+    })()`);
+    const indexAfter = await evaluate("IVG.state.round.index");
+    check(
+      indexAfter === indexBefore + 1,
+      "escribir: cada avance va a una sola pregunta",
+      `${indexBefore} → ${indexAfter}`
+    );
   }
 
   check(formQuestions > 0 && sentenceQuestions > 0, "escribir: la ronda mezcla formas y frases", `${formQuestions} + ${sentenceQuestions}`);
@@ -879,10 +910,96 @@ async function playWriteRound({ correctCount }) {
   return expectedScore;
 }
 
+/**
+ * "was" and "were" are both past of "be", but only one fits the sentence. The
+ * mode must keep the answer key honest (the sentence picks the word) and still
+ * name the near miss, instead of dropping it into the generic wrong answer.
+ */
+async function checkVariantNearMiss() {
+  const be = VERBS.find((verb) => verb.base === "be");
+  const bePast = be.examples.find((example) => example.form === "past");
+  // Level 1 has ten verbs and a round is ten questions: "be" is always there.
+  const crafted = JSON.stringify({
+    verb: be,
+    form: "past",
+    correct: "was",
+    accepted: ["was"],
+    variants: ["was", "were"],
+    sentence: "I ____ at the park yesterday.",
+    example: bePast
+  });
+
+  await evaluate("location.hash = ''");
+  await evaluate("document.querySelector('[data-action=home]').click()");
+  await waitFor("!!document.querySelector('.mode')", "inicio antes de la variante");
+  await evaluate(`document.querySelector('[data-action="set-level"][data-level="1"]').click()`);
+  await waitFor("IVG.profile.level === 1", "nivel 1 para la variante");
+  await evaluate("document.querySelector('[data-mode=write]').click()");
+  await waitFor("IVG.state.round && IVG.state.round.mode === 'write'", "ronda de escribir en nivel 1");
+
+  // One sentence question for "be", typed in and answered, whatever came up.
+  const typeAndSend = (word) =>
+    evaluate(`(() => {
+      const round = IVG.state.round;
+      Object.assign(round.items[round.index], ${crafted});
+      round.answered = null;
+      IVG.rerender();
+      const field = document.querySelector('[data-role=write-input]');
+      field.value = ${JSON.stringify(word)};
+      field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      return true;
+    })()`);
+
+  const before = JSON.parse(
+    await evaluate(`(() => JSON.stringify({
+      score: IVG.state.round.score,
+      answered: !!IVG.state.round.answered,
+      input: document.querySelectorAll('[data-role=write-input]').length,
+      sentence: ((document.querySelector('.sentence') || {}).textContent || '').trim()
+    }))()`)
+  );
+  check(before.input === 1, "variante: la pregunta de frase se pinta para escribir", `${before.input}`);
+
+  await typeAndSend("were");
+  const near = JSON.parse(
+    await evaluate(`(() => JSON.stringify({
+      score: IVG.state.round.score,
+      streak: IVG.state.round.streak,
+      nearMiss: Boolean(IVG.state.round.answered && IVG.state.round.answered.nearMiss),
+      feedback: (document.querySelector('.feedback__head') || {}).textContent || ''
+    }))()`)
+  );
+  check(near.score === before.score, "variante: «were» no acierta en la frase de «was»", `${near.score}`);
+  check(near.streak === 0, "variante: la variante hermana reinicia la racha", `${near.streak}`);
+  check(near.nearMiss, "variante: el fallo se marca como variante cercana");
+  check(near.feedback.includes("toca «was»"), "variante: el aviso dice qué palabra toca", near.feedback);
+  check(near.feedback.includes("no «were»"), "variante: el aviso nombra lo escrito", near.feedback);
+  check(!near.feedback.includes("la respuesta era"), "variante: no cae en el aviso genérico", near.feedback);
+
+  await typeAndSend("was");
+  const right = JSON.parse(
+    await evaluate(`(() => JSON.stringify({
+      score: IVG.state.round.score,
+      feedback: (document.querySelector('.feedback__head') || {}).textContent || ''
+    }))()`)
+  );
+  check(right.score === before.score + 1, "variante: «was» sí acierta en su frase", `${right.score}`);
+  check(right.feedback.includes("Muy bien"), "variante: el acierto se celebra", right.feedback);
+
+  // Leave the game as it was found.
+  await evaluate("document.querySelector('[data-action=home]').click()");
+  await waitFor("!!document.querySelector('.mode')", "inicio antes de volver al nivel 2");
+  await evaluate(`document.querySelector('[data-action="set-level"][data-level="2"]').click()`);
+  await waitFor("IVG.profile.level === 2", "vuelta al nivel 2");
+
+  return 1;
+}
+
 const quizScore = await playRound("quiz", { correctCount: 8 });
 const gapsScore = await playRound("gaps", { correctCount: 6 });
 const listenScore = await playRound("listen", { correctCount: 10 });
 const writeScore = await playWriteRound({ correctCount: 7 });
+const variantStars = await checkVariantNearMiss();
 
 const totals = JSON.parse(
   await evaluate(`(() => JSON.stringify({
@@ -894,7 +1011,7 @@ const totals = JSON.parse(
   }))()`)
 );
 check(
-  totals.stars === baseline.stars + quizScore + gapsScore + listenScore + writeScore,
+  totals.stars === baseline.stars + quizScore + gapsScore + listenScore + writeScore + variantStars,
   "las estrellas se acumulan entre rondas",
   JSON.stringify(totals)
 );

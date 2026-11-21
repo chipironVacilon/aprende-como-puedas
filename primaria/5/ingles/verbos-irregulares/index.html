@@ -2210,7 +2210,11 @@ function renderRound() {
     ? `<div class="feedback ${isRight ? "feedback--ok" : "feedback--bad"}" role="status">
          <div class="feedback__head">
            <span aria-hidden="true">${isRight ? "✅" : "❌"}</span>
-           <span>${isRight ? "¡Muy bien! +1 estrella" : `Casi… la respuesta era «${esc(item.correct)}»`}</span>
+           <span>${isRight
+             ? "¡Muy bien! +1 estrella"
+             : answered.nearMiss
+               ? `Casi… toca «${esc(item.correct)}», no «${esc(answered.text || "")}»`
+               : `Casi… la respuesta era «${esc(item.correct)}»`}</span>
          </div>
          ${written}
          <div class="trio">
@@ -2252,10 +2256,16 @@ function renderRound() {
     if (speaker) speaker.classList.add("speak--listening");
   }
 
-  // Writing mode lives on the keyboard: the field is ready for the next word.
-  if (round.mode === "write" && !answered) {
-    const field = view.querySelector('[data-role="write-input"]');
-    if (field) field.focus();
+  // Writing mode lives on the keyboard: the field is ready for the next word,
+  // and once the answer locks the field it can only continue from the button.
+  if (round.mode === "write") {
+    if (!answered) {
+      const field = view.querySelector('[data-role="write-input"]');
+      if (field) field.focus();
+    } else {
+      const next = view.querySelector("[data-action=next]");
+      if (next) next.focus();
+    }
   }
 }
 
@@ -2676,6 +2686,14 @@ function speakCurrentIfNeeded() {
 /** The answers a written question accepts: every variant the verb lists. */
 const acceptedAnswers = (item) => (item.accepted || [item.correct]).map(normalizeWriting);
 
+/** The other spellings of the form this question asks for, e.g. was / were. */
+function siblingVariants(item) {
+  const verb = item && item.verb;
+  const form = item && item.form;
+  if (!verb || !form || typeof verb[form] !== "string") return [];
+  return formsOf(verb[form]).map(normalizeWriting);
+}
+
 /** Scores one answered question: the only place an answer pays or costs a star. */
 function resolveAnswer(item, isRight, record) {
   const round = state.round;
@@ -2742,7 +2760,11 @@ function checkWritten() {
   }
 
   const isRight = acceptedAnswers(item).includes(written);
-  resolveAnswer(item, isRight, { text: typed.trim(), right: isRight });
+  // The sentence rules: a sibling variant of the same form (was / were) is not
+  // the answer here. It is still not a mute failure, so the notice names both
+  // the word the sentence wants and the one that was typed.
+  const nearMiss = !isRight && siblingVariants(item).includes(written);
+  resolveAnswer(item, isRight, { text: typed.trim(), right: isRight, nearMiss });
 }
 
 function nextQuestion() {
@@ -3003,6 +3025,11 @@ window.IVG = {
   get verbs() { return VERBS; },
   get player() { return Player; },
   get arcade() { return state.arcade; },
+  get invaders() { return state.invaders; },
+  /** Repaint the current view, for tests that change a question in place. */
+  rerender() {
+    render();
+  },
   reset() {
     resetProgress();
   }
