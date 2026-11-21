@@ -92,5 +92,8 @@ pruebas nuevas se añaden al lado, sin reescribir lo que había.
 L4 (sesión, cierre): T1, T2 y T3 hechos. `node scripts/play-test.mjs` en verde: 848
 comprobaciones y salida 0. El repaso nativo aprobó el candidato
 (`review-8768ebd0c80159e6`, lentes resiliencia, legibilidad y fiabilidad) con nueve
-hallazgos no bloqueantes, anotados como trabajo posterior. Sin commit: el árbol
-todavía mezcla esta tarea con la de `escribir-ajustes.md`.
+hallazgos no bloqueantes, anotados como trabajo posterior.
+
+L5 (sesión, entrega): T1-T3 van en `faa2df0` (`feat(verbos-irregulares): add the
+Invasores space-invaders mode`), encima de `b6f85ad` con el arreglo de escribir.
+Empujado a `main` (`b4da226..faa2df0`).

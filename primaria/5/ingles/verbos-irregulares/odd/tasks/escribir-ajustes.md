@@ -43,5 +43,7 @@ L2: Los hallazgos llegan de la revisión nativa `review-9ec3303036d79ffe`
 
 L2 (sesión, cierre): T1 hecho. `round.answered.nearMiss` marca la variante hermana y el
 aviso dice «Casi… toca «was», no «were»» en vez del mensaje genérico; al responder, el
-cursor se va al botón de seguir. `node scripts/play-test.mjs` en verde: 848
-comprobaciones, salida 0.
+cursor se va al botón de seguir. `node scripts/play-test.mjs` en verde con las dos
+tareas juntas: 848 comprobaciones, salida 0. Va en `b6f85ad`
+(`fix(verbos-irregulares): name the near miss and move the focus after writing`),
+empujado a `main`.
