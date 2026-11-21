@@ -22,6 +22,18 @@ con doble clic.
   o fallar suena la palabra y después su frase de ejemplo, para unir la escritura
   con la pronunciación. Una casilla vacía no gasta la pregunta, y una respuesta
   con mayúsculas, espacios de más o punto final cuenta como buena.
+- **Invasores**: un juego tipo Space Invaders. La nave está abajo y arriba espera
+  una oleada de cuatro marcianos, cada uno con una palabra en inglés. Arriba se ve
+  el verbo en infinitivo y la forma que se pide (el pasado o el participio) y hay que
+  derribar al marciano que lleva la forma correcta. Se mueve la nave con las flechas
+  `←` `→` y se dispara con la barra espaciadora, un tiro a la vez. Derribar al
+  correcto suma un punto, da una estrella, suena esa forma y llega un verbo nuevo;
+  derribar a uno equivocado cuesta una vida (se empieza con tres) y el marciano cae.
+  Los marcianos bajan despacio: si llegan a la altura de la nave se pierde una vida y
+  la oleada vuelve arriba con las mismas palabras. La partida termina con la tercera
+  vida perdida y el récord se guarda en el navegador. En un móvil o una tableta se
+  juega **a pantalla completa y con el dedo**, como el arcade: los botones `◀`,
+  **Fuego** y `▶`, o arrastrando el dedo por el campo para llevar la nave debajo.
 - **Arcade del marcianito**: un laberinto tipo Pac-Man. Arriba aparece un verbo en
   infinitivo y por el laberinto hay cuatro palabras: con las flechas del teclado se
   mueve al marcianito para recoger la que es su **pasado**, esquivando a los
@@ -61,7 +73,8 @@ que existieran estos contadores arranca con ellos a cero y conserva su total.
 
 Atajos de teclado: `1`-`4` responden y `Enter` pasa a la siguiente pregunta. El
 arcade se juega con las flechas (`←` `↑` `→` `↓`), con las flechas táctiles de la
-pantalla o deslizando el dedo por el laberinto.
+pantalla o deslizando el dedo por el laberinto. El juego de invasores, con `←` `→`
+para mover la nave y la barra espaciadora para disparar.
 
 ## Niveles
 
@@ -79,7 +92,9 @@ Cada nivel arma sus propias opciones: en el nivel 1 las respuestas falsas salen 
 sus diez verbos, así que no se cuelan formas que todavía no se han estudiado. El
 arcade también respeta el nivel: en el nivel 1 el verbo de arriba y las cuatro
 palabras del laberinto salen de esos diez verbos, y lo que se recoge es siempre el
-pasado. Las estrellas, la racha y las rondas son las mismas en los dos niveles; la
+pasado. Lo mismo el juego de invasores: en el nivel 1 el verbo y las cuatro
+palabras salen de esos diez verbos y lo que se derriba es el pasado; en el nivel 2
+la forma pedida alterna pasado y participio. Las estrellas, la racha y las rondas son las mismas en los dos niveles; la
 barra de progreso cuenta solo los verbos del nivel elegido.
 
 ## La pronunciación
@@ -109,6 +124,7 @@ Sonia (la usada), Libby, Maisie, Ryan, Thomas.
 | --- | --- |
 | `index.html` | El juego completo: pantallas, estilos y lógica (incluida la pantalla y el marcador del arcade). |
 | `arcade.js` | La simulación del arcade (laberinto, marcianito, monstruos, movimiento por casillas, puntuación de casillas) y su capa de dibujo y efectos sobre LittleJS. |
+| `invaders.js` | La simulación del juego de invasores (la oleada, la nave, el disparo, las vidas y el descenso) sin DOM ni reloj propio: `index.html` le da el tiempo y pinta el campo. |
 | `vendor/littlejs.min.js` | El motor LittleJS 1.31.0, vendorizado (MIT, ~570 KB). Se carga con un `<script src>` normal, sin módulos ni compilación. |
 | `verbs.js` | Los 61 verbos con sus dos frases de ejemplo y su traducción. |
 | `assets/audio/` | Las grabaciones en inglés (305 ficheros MP3, ~2 MB en total): 3 formas y 2 frases por verbo. |

@@ -166,6 +166,7 @@ await waitFor("!!window.IVG", "el juego arranca");
 const home = await evaluate(`(() => ({
   modes: document.querySelectorAll('.mode').length,
   arcadeCard: (document.querySelector('.mode--arcade') || {}).textContent || '',
+  invadersCard: (document.querySelector('.mode--invaders') || {}).textContent || '',
   stars: document.getElementById('stat-stars').textContent,
   practiced: document.querySelector('.progress-card p').textContent,
   hasBanner: !!document.querySelector('.banner'),
@@ -176,7 +177,12 @@ const home = await evaluate(`(() => ({
     pressed: node.getAttribute('aria-pressed')
   }))
 }))()`);
-check(home.modes === 6, "el inicio ofrece 6 modos", `encontrados ${home.modes}`);
+check(home.modes === 7, "el inicio ofrece 7 modos", `encontrados ${home.modes}`);
+check(
+  home.invadersCard.includes("Invasores"),
+  "el inicio ofrece el juego de invasores",
+  home.invadersCard
+);
 check(
   home.arcadeCard.includes("Arcade"),
   "el inicio ofrece el arcade del marcianito",
@@ -1106,6 +1112,7 @@ const cardStars = JSON.parse(
       listen: count('listen'),
       write: count('write'),
       arcade: count('arcade'),
+      invaders: count('invaders'),
       study: document.querySelectorAll('.mode--study .mode__stars').length,
       labels: [...document.querySelectorAll('.mode__stars')].map((node) => node.getAttribute('aria-label'))
     });
@@ -1117,13 +1124,14 @@ check(
   JSON.stringify(cardStars)
 );
 check(cardStars.arcade === 0, "el arcade arranca con 0 estrellas en su tarjeta", `${cardStars.arcade}`);
+check(cardStars.invaders === 0, "invasores arranca con 0 estrellas en su tarjeta", `${cardStars.invaders}`);
 check(
-  cardStars.write === writeScore,
+  cardStars.write === writeScore + variantStars,
   "la tarjeta de escribir cuenta sus estrellas",
-  `${cardStars.write} ≠ ${writeScore}`
+  `${cardStars.write} ≠ ${writeScore + variantStars}`
 );
 check(
-  cardStars.quiz + cardStars.gaps + cardStars.listen + cardStars.write + cardStars.arcade === totals.stars,
+  cardStars.quiz + cardStars.gaps + cardStars.listen + cardStars.write + cardStars.arcade + cardStars.invaders === totals.stars,
   "las estrellas de las pruebas suman el total de la barra",
   JSON.stringify({ cardStars, total: totals.stars })
 );
@@ -1870,6 +1878,258 @@ check(desktop.padShown === false, "sin pantalla táctil no aparecen las flechas"
 await evaluate("document.querySelector('[data-action=home]').click()");
 await waitFor("!!document.querySelector('.mode')", "inicio después del arcade del móvil");
 
+/* ------------------------------------------------------------ invasores ---- */
+
+// The whole road of the new mode: the countdown, the keyboard, a right shot that
+// scores, a wrong shot that costs a life, and the end of the game with its
+// record. Everything is read from the running game, never from its markup.
+const invadersState = async () =>
+  JSON.parse(
+    await evaluate(`(() => {
+      const session = IVG.invaders;
+      const snap = session ? session.game.snapshot() : null;
+      const overlay = document.querySelector('.arcade__countdown');
+      const canvas = document.querySelector('.invaders__canvas');
+      const lives = document.querySelector('.arcade__lives');
+      const box = canvas ? canvas.getBoundingClientRect() : null;
+      return JSON.stringify({
+        view: IVG.state.view,
+        started: session ? session.started : null,
+        stopped: session ? session.stopped : null,
+        score: snap ? snap.score : null,
+        lives: snap ? snap.lives : null,
+        shipX: snap ? snap.shipX : null,
+        aliens: snap ? snap.aliens.map((alien) => ({
+          x: alien.x,
+          width: alien.width,
+          word: alien.word,
+          correct: alien.correct,
+          alive: alien.alive
+        })) : [],
+        countdown: overlay ? overlay.textContent : null,
+        hudVerb: (document.querySelector('.arcade__verb') || {}).textContent || '',
+        hudLabel: (document.querySelector('.arcade__label') || {}).textContent || '',
+        hudLives: lives ? lives.textContent : '',
+        hudLivesLabel: lives ? lives.getAttribute('aria-label') : '',
+        hint: (document.querySelector('.arcade__hint') || {}).textContent || '',
+        canvas: box ? { width: Math.round(box.width), height: Math.round(box.height), ratio: box.width / box.height } : null,
+        modeStars: IVG.profile.modeStars.invaders,
+        best: IVG.profile.invadersBest
+      });
+    })()`)
+  );
+
+/** Hold an arrow until the ship sits under one alien: the real controls, never a hack. */
+async function aimInvadersAt(index) {
+  const alien = JSON.parse(
+    await evaluate(`(() => {
+      const snap = IVG.invaders.game.snapshot();
+      const target = snap.aliens[${index}];
+      return JSON.stringify({
+        left: target.x + 6,
+        right: target.x + target.width - 6,
+        shipX: snap.shipX
+      });
+    })()`)
+  );
+  if (alien.shipX > alien.left && alien.shipX < alien.right) return true;
+  const key = alien.left > alien.shipX ? "ArrowRight" : "ArrowLeft";
+  await evaluate(
+    `document.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true }))`
+  );
+  const arrived = await waitFor(
+    `(() => { const x = IVG.invaders.game.snapshot().shipX; return x > ${alien.left} && x < ${alien.right}; })()`,
+    `la nave apunta al marciano ${index}`
+  );
+  await evaluate(
+    `document.dispatchEvent(new KeyboardEvent('keyup', { key: '${key}', bubbles: true }))`
+  );
+  return arrived;
+}
+
+const pullInvadersTrigger = (type) =>
+  evaluate(`document.dispatchEvent(new KeyboardEvent('${type}', { key: ' ', bubbles: true }))`);
+
+await evaluate("document.querySelector('[data-action=home]').click()");
+await waitFor("!!document.querySelector('.mode--invaders')", "inicio antes de invasores");
+await evaluate("document.querySelector('[data-mode=invaders]').click()");
+await waitFor("IVG.state.view === 'invaders' && !!IVG.invaders", "arranca el juego de invasores");
+
+const invadersOpening = await invadersState();
+check(invadersOpening.view === "invaders", "invasores abre su propia pantalla", invadersOpening.view);
+check(
+  invadersOpening.started === false && invadersOpening.countdown !== null,
+  "invasores arranca con una cuenta atrás",
+  JSON.stringify({ started: invadersOpening.started, countdown: invadersOpening.countdown })
+);
+check(
+  invadersOpening.aliens.length === 0 && invadersOpening.hudVerb === "—",
+  "durante la cuenta atrás no hay verbo ni palabras",
+  JSON.stringify({ aliens: invadersOpening.aliens.length, verb: invadersOpening.hudVerb })
+);
+check(
+  invadersOpening.hint.includes("barra espaciadora"),
+  "la ayuda explica cómo se dispara",
+  invadersOpening.hint
+);
+check(
+  invadersOpening.canvas && Math.abs(invadersOpening.canvas.ratio - 4 / 3) < 0.05,
+  "el campo de invasores conserva su forma 4:3",
+  JSON.stringify(invadersOpening.canvas)
+);
+
+await waitFor("IVG.invaders.started === true", "termina la cuenta atrás de invasores");
+const wave = await invadersState();
+const invadersTarget = await evaluate("IVG.invaders.target.base");
+check(wave.aliens.length === 4, "la oleada trae cuatro palabras", `${wave.aliens.length}`);
+check(
+  wave.aliens.filter((alien) => alien.correct).length === 1,
+  "una sola palabra es la correcta",
+  JSON.stringify(wave.aliens)
+);
+check(wave.hudVerb === invadersTarget, "el marcador enseña el verbo", `${wave.hudVerb} ≠ ${invadersTarget}`);
+check(
+  /^(Pasado|Participio) de$/.test(wave.hudLabel),
+  "el marcador dice qué forma se pide",
+  wave.hudLabel
+);
+check(
+  wave.hudLives === "❤❤❤" && wave.hudLivesLabel === "3 vidas",
+  "se empieza con tres vidas",
+  JSON.stringify({ hearts: wave.hudLives, label: wave.hudLivesLabel })
+);
+await shot("13-invasores");
+
+// The keyboard moves the ship and lets it go on key release.
+const beforeMove = (await invadersState()).shipX;
+await evaluate("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))");
+await sleep(250);
+await evaluate("document.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft', bubbles: true }))");
+const afterMove = (await invadersState()).shipX;
+const afterRelease = await invadersState();
+check(afterMove < beforeMove, "la flecha izquierda mueve la nave", `${beforeMove} → ${afterMove}`);
+await sleep(150);
+check(
+  ((await invadersState()).shipX) === afterRelease.shipX,
+  "al soltar la flecha la nave se detiene",
+  `${afterRelease.shipX} → ${(await invadersState()).shipX}`
+);
+
+// The right alien goes down: a point, a star and a brand-new verb.
+await aimInvadersAt(wave.aliens.findIndex((alien) => alien.correct));
+await pullInvadersTrigger("keydown");
+const scored = await waitFor("IVG.invaders.game.snapshot().score === 1", "el disparo derriba la palabra correcta");
+await pullInvadersTrigger("keyup");
+const hit = await invadersState();
+check(scored && hit.score === 1, "acertar suma un punto", `${hit.score}`);
+check(hit.modeStars === 1, "acertar da una estrella al modo", `${hit.modeStars}`);
+check(hit.lives === 3, "acertar no cuesta vidas", `${hit.lives}`);
+check(
+  hit.aliens.length === 4 && hit.aliens.filter((alien) => alien.correct).length === 1,
+  "acertar trae un verbo nuevo con su oleada",
+  JSON.stringify(hit.aliens)
+);
+check(hit.hudVerb !== invadersTarget, "el marcador cambia de verbo", `${hit.hudVerb}`);
+
+// Wrong words cost lives and never points; the last one ends the game.
+for (const expectedLives of [2, 1, 0]) {
+  const snapshot = await invadersState();
+  const wrongIndex = snapshot.aliens.findIndex((alien) => alien.alive && !alien.correct);
+  await aimInvadersAt(wrongIndex);
+  await pullInvadersTrigger("keydown");
+  const lost = await waitFor(
+    `IVG.invaders.game.snapshot().lives === ${expectedLives}`,
+    `un fallo cuesta la vida (quedan ${expectedLives})`
+  );
+  await pullInvadersTrigger("keyup");
+  const after = await invadersState();
+  check(lost && after.lives === expectedLives, `fallar deja ${expectedLives} vidas`, `${after.lives}`);
+  check(after.score === 1, "fallar no suma puntos", `${after.score}`);
+  check(
+    after.hudLives === "❤".repeat(expectedLives) + "🖤".repeat(3 - expectedLives),
+    `el marcador enseña ${expectedLives} vidas`,
+    after.hudLives
+  );
+  if (expectedLives > 0) {
+    check(
+      after.aliens.filter((alien) => alien.alive).length === expectedLives + 1,
+      `quedan ${expectedLives + 1} palabras en la oleada`,
+      `${after.aliens.filter((alien) => alien.alive).length}`
+    );
+  }
+}
+
+await waitFor("IVG.invaders.stopped === true", "cero vidas terminan la partida");
+await waitFor("!!document.querySelector('.arcade__over')", "aparece la pantalla del final");
+const invadersOver = JSON.parse(
+  await evaluate(`(() => {
+    const stored = JSON.parse(localStorage.getItem('verbos-irregulares-v1') || '{}');
+    return JSON.stringify({
+      text: (document.querySelector('.arcade__over') || {}).textContent || '',
+      best: IVG.profile.invadersBest,
+      stored: typeof stored.invadersBest === 'number' ? stored.invadersBest : null,
+      again: !!document.querySelector('[data-action=play][data-mode=invaders]')
+    });
+  })()`)
+);
+check(/Has derribado/.test(invadersOver.text), "el final cuenta lo que se derribó", invadersOver.text.slice(0, 120));
+check(invadersOver.best === 1, "el récord de invasores se apunta", `${invadersOver.best}`);
+check(invadersOver.stored === 1, "el récord se guarda en el navegador", `${invadersOver.stored}`);
+check(invadersOver.again, "el final deja jugar otra vez");
+
+// Fullscreen is the same shared screen treatment as the maze.
+await evaluate("document.querySelector('[data-action=play][data-mode=invaders]').click()");
+await waitFor("!!IVG.invaders && IVG.invaders.started === false", "jugar otra vez vuelve a la cuenta atrás");
+await evaluate("document.querySelector('[data-action=invaders-fullscreen]').click()");
+await waitFor("document.body.classList.contains('arcade-fullscreen')", "invasores entra en pantalla completa");
+await sleep(250);
+const fitted = await invadersState();
+check(
+  fitted.canvas && Math.abs(fitted.canvas.ratio - 4 / 3) < 0.06,
+  "a pantalla completa el campo no se deforma",
+  JSON.stringify(fitted.canvas)
+);
+await evaluate("document.querySelector('[data-action=invaders-fullscreen]').click()");
+await waitFor("!document.body.classList.contains('arcade-fullscreen')", "invasores sale de pantalla completa");
+
+// The level still rules the new game: level 1 never asks for anything but the past.
+await evaluate("document.querySelector('[data-action=home]').click()");
+await waitFor("!!document.querySelector('.mode--invaders')", "inicio después de invasores");
+await evaluate(`document.querySelector('[data-action="set-level"][data-level="1"]').click()`);
+await waitFor("IVG.profile.level === 1", "nivel 1 antes de invasores");
+await evaluate("document.querySelector('[data-mode=invaders]').click()");
+await waitFor("!!IVG.invaders && IVG.invaders.started === true", "invasores en nivel 1");
+const levelOneInvaders = JSON.parse(
+  await evaluate(`(() => {
+    const snap = IVG.invaders.game.snapshot();
+    return JSON.stringify({
+      label: (document.querySelector('.arcade__label') || {}).textContent || '',
+      target: IVG.invaders.target.base,
+      words: snap.aliens.map((alien) => alien.word)
+    });
+  })()`)
+);
+check(
+  LEVEL_ONE.includes(levelOneInvaders.target),
+  "nivel 1 invasores: el verbo es de los diez del nivel",
+  levelOneInvaders.target
+);
+check(
+  levelOneInvaders.label === "Pasado de",
+  "nivel 1 invasores: solo se pide el pasado",
+  levelOneInvaders.label
+);
+check(
+  levelOneInvaders.words.every((word) => levelOnePastPool.has(word)),
+  "nivel 1 invasores: no se cuelan formas de fuera",
+  JSON.stringify(levelOneInvaders.words)
+);
+
+await evaluate("document.querySelector('[data-action=home]').click()");
+await waitFor("!!document.querySelector('.mode')", "inicio tras invasores");
+await evaluate(`document.querySelector('[data-action="set-level"][data-level="2"]').click()`);
+await waitFor("IVG.profile.level === 2", "vuelta al nivel 2");
+
 /* ------------------------------------------------------ audio + keyboard ---- */
 
 await evaluate("document.querySelector('[data-action=home]').click()");
@@ -1962,8 +2222,8 @@ check(
   JSON.stringify(migrated)
 );
 check(
-  Object.values(migrated.modeStars).join() === "0,0,0,0,0" &&
-    migrated.cardStars.join() === "0,0,0,0,0",
+  Object.values(migrated.modeStars).join() === "0,0,0,0,0,0" &&
+    migrated.cardStars.join() === "0,0,0,0,0,0",
   "un perfil sin contadores por prueba arranca a cero, sin inventar estrellas",
   JSON.stringify({ modeStars: migrated.modeStars, cardStars: migrated.cardStars })
 );
@@ -2045,6 +2305,7 @@ const wiped = JSON.parse(
       streak: IVG.profile.bestStreak,
       rounds: IVG.profile.rounds,
       arcadeBest: IVG.profile.arcadeBest,
+      invadersBest: IVG.profile.invadersBest,
       modeStars: IVG.profile.modeStars,
       cardStars: [...document.querySelectorAll('.mode__stars b')].map((node) => node.textContent),
       verbs: Object.keys(IVG.profile.verbs || {}).length,
@@ -2059,9 +2320,10 @@ const wiped = JSON.parse(
 );
 check(wiped.stars === 0 && wiped.header === "0", "borrar el progreso deja las estrellas a cero", `${wiped.stars} / «${wiped.header}»`);
 check(wiped.streak === 0 && wiped.rounds === 0 && wiped.arcadeBest === 0, "la racha y los récords desaparecen", JSON.stringify(wiped));
+check(wiped.invadersBest === 0, "el récord de invasores también se borra", `${wiped.invadersBest}`);
 check(wiped.verbs === 0, "las estadísticas de los verbos se borran", `${wiped.verbs} verbos guardados`);
 check(
-  Object.values(wiped.modeStars).join() === "0,0,0,0,0" && wiped.cardStars.join() === "0,0,0,0,0",
+  Object.values(wiped.modeStars).join() === "0,0,0,0,0,0" && wiped.cardStars.join() === "0,0,0,0,0,0",
   "borrar el progreso deja a cero las estrellas de cada prueba",
   JSON.stringify({ modeStars: wiped.modeStars, cardStars: wiped.cardStars })
 );

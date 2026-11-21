@@ -23,6 +23,7 @@
     --listen: #ffb347;
     --write: #a3e635;
     --arcade: #f472b6;
+    --invaders: #38bdf8;
     --radius: 20px;
     --shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
   }
@@ -314,6 +315,7 @@
   .mode--listen { --accent: var(--listen); }
   .mode--write { --accent: var(--write); }
   .mode--arcade { --accent: var(--arcade); }
+  .mode--invaders { --accent: var(--invaders); }
 
   /* ---- Arcade (maze mini-game) ---- */
   .arcade { display: grid; gap: 14px; }
@@ -428,6 +430,32 @@
   .arcade__key--left { grid-area: left; }
   .arcade__key--right { grid-area: right; }
   .arcade__key--down { grid-area: down; }
+
+  /* ---- Invasores ----
+     Shares the arcade's boxes (HUD, stage, keypad, fullscreen) so there is one
+     layout to keep in shape; only the keypad changes: a row with fire in the
+     middle instead of the four directions. */
+  .arcade__lives {
+    min-width: 84px;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+  }
+
+  .invaders__pad {
+    grid-template-areas: "left fire right";
+    grid-template-columns: repeat(3, 1fr);
+    width: min(100%, 300px);
+  }
+
+  .invaders__key--fire {
+    grid-area: fire;
+    background: rgba(56, 189, 248, 0.22);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .invaders__key--fire:active { background: rgba(56, 189, 248, 0.42); }
 
   /* ---- Arcade a pantalla completa ----
      The class is the fullscreen mode: a browser that refuses the real
@@ -1042,6 +1070,7 @@
 <script src="verbs.js"></script>
 <script src="vendor/littlejs.min.js"></script>
 <script src="arcade.js"></script>
+<script src="invaders.js"></script>
 <script>
 "use strict";
 
@@ -1090,7 +1119,7 @@ function sayForm(verb, form) {
 
 const STORAGE_KEY = "verbos-irregulares-v1";
 // The tests that award stars. `study` only flips cards, so it never earns one.
-const STAR_MODES = ["quiz", "gaps", "listen", "write", "arcade"];
+const STAR_MODES = ["quiz", "gaps", "listen", "write", "arcade", "invaders"];
 
 /** A brand-new profile. Every nested object is fresh, so callers may mutate it. */
 function emptyProfile() {
@@ -1098,7 +1127,16 @@ function emptyProfile() {
   STAR_MODES.forEach((mode) => { modeStars[mode] = 0; });
   // Level 2 is the whole game, so a profile saved before levels existed keeps
   // playing exactly what it used to.
-  return { level: 2, stars: 0, bestStreak: 0, rounds: 0, verbs: {}, arcadeBest: 0, modeStars };
+  return {
+    level: 2,
+    stars: 0,
+    bestStreak: 0,
+    rounds: 0,
+    verbs: {},
+    arcadeBest: 0,
+    invadersBest: 0,
+    modeStars
+  };
 }
 
 /** Per-test star counters, tolerant of profiles saved before they existed. */
@@ -1120,6 +1158,7 @@ function loadProfile() {
       bestStreak: Number(parsed.bestStreak) || 0,
       rounds: Number(parsed.rounds) || 0,
       arcadeBest: Number(parsed.arcadeBest) || 0,
+      invadersBest: Number(parsed.invadersBest) || 0,
       verbs: parsed.verbs && typeof parsed.verbs === "object" ? parsed.verbs : {},
       modeStars: loadModeStars(parsed.modeStars)
     };
@@ -1596,7 +1635,8 @@ const MODES = {
   gaps: { name: "Frases", icon: "✏️", accent: "var(--gaps)" },
   listen: { name: "Escucha", icon: "🎧", accent: "var(--listen)" },
   write: { name: "Escribe", icon: "⌨️", accent: "var(--write)" },
-  arcade: { name: "Arcade", icon: "👾", accent: "var(--arcade)" }
+  arcade: { name: "Arcade", icon: "👾", accent: "var(--arcade)" },
+  invaders: { name: "Invasores", icon: "🛸", accent: "var(--invaders)" }
 };
 
 /* =========================================================================
@@ -1820,6 +1860,7 @@ const state = {
   study: { index: 0, filter: "" },
   lastRound: null,
   arcade: null,
+  invaders: null,
   confirmingReset: false
 };
 
@@ -1828,9 +1869,15 @@ const view = document.getElementById("view");
 function go(target) {
   stopConfetti();
   stopArcade();
+  stopInvaders();
   state.confirmingReset = false;
   if (target === "arcade") {
     startArcade();
+    if (location.hash.slice(1) !== target) location.hash = `#${target}`;
+    return;
+  }
+  if (target === "invaders") {
+    startInvaders();
     if (location.hash.slice(1) !== target) location.hash = `#${target}`;
     return;
   }
@@ -1852,6 +1899,7 @@ window.addEventListener("hashchange", () => {
   const target = location.hash.slice(1) || "home";
   if (target === "study" && state.view === "study") return;
   if (target === "arcade" && state.view === "arcade") return;
+  if (target === "invaders" && state.view === "invaders") return;
   if (MODES[target] && state.round && state.round.mode === target) return;
   go(target);
 });
@@ -2025,6 +2073,15 @@ function renderHome() {
           <small>Mueve al marcianito por el laberinto, recoge el pasado correcto y esquiva a los monstruos.</small>
         </span>
         ${modeStarsBadge("arcade")}
+        <span class="mode__go" aria-hidden="true">→</span>
+      </button>
+      <button class="mode mode--invaders" data-action="play" data-mode="invaders">
+        <span class="mode__icon" aria-hidden="true">🛸</span>
+        <span class="mode__body">
+          <b>Invasores</b>
+          <small>Mueve la nave, dispara y derriba al marciano que lleva ${withParticiple ? "la forma correcta" : "el pasado correcto"} antes de que te alcancen.</small>
+        </span>
+        ${modeStarsBadge("invaders")}
         <span class="mode__go" aria-hidden="true">→</span>
       </button>
     </div>
@@ -2318,6 +2375,7 @@ function render() {
 
   if (state.view === "play") renderRound();
   else if (state.view === "arcade") renderArcade();
+  else if (state.view === "invaders") renderInvaders();
   else if (state.view === "study") renderStudy();
   else renderHome();
 }
@@ -2357,9 +2415,27 @@ function arcadeVerb(avoid = []) {
   return verb || VERBS[0];
 }
 
-/** The single-word past form the alien has to collect. */
-function arcadeAnswer(verb) {
-  return firstForm(verb.past);
+/**
+ * The four signs of one round: the right form plus three look-alikes from the
+ * same level. Other forms of the same verb (was / were) never qualify as a
+ * wrong answer, or the round would have two good ones.
+ */
+function wordsForForm(target, form) {
+  const correct = firstForm(target[form]);
+  const own = new Set(formsOf(target[form]).map((word) => word.toLowerCase()));
+  const wrong = shuffle(
+    poolFor(form).filter(
+      (word) => !own.has(word.toLowerCase()) && word.toLowerCase() !== correct.toLowerCase()
+    )
+  ).slice(0, Math.max(1, ARCADE_WORDS - 1));
+  return shuffle(
+    [correct, ...wrong].map((text) => ({ text, correct: text.toLowerCase() === correct.toLowerCase() }))
+  );
+}
+
+/** The past forms the alien has to collect. */
+function arcadeWords(target) {
+  return wordsForForm(target, "past");
 }
 
 /** The next verb of the round: neither the current one nor the last few. */
@@ -2368,24 +2444,6 @@ function arcadeNextVerb(session) {
   const verb = arcadeVerb(avoid);
   session.recent = [verb.base, ...avoid].slice(0, ARCADE_MEMORY);
   return verb;
-}
-
-/**
- * The four signs of one round: the right past form plus three look-alikes from
- * the same level. Other forms of the same verb (was / were) never qualify as a
- * wrong answer, or the round would have two good ones.
- */
-function arcadeWords(target) {
-  const correct = arcadeAnswer(target);
-  const own = new Set(formsOf(target.past).map((word) => word.toLowerCase()));
-  const wrong = shuffle(
-    poolFor("past").filter(
-      (word) => !own.has(word.toLowerCase()) && word.toLowerCase() !== correct.toLowerCase()
-    )
-  ).slice(0, Math.max(1, ARCADE_WORDS - 1));
-  return shuffle(
-    [correct, ...wrong].map((text) => ({ text, correct: text.toLowerCase() === correct.toLowerCase() }))
-  );
 }
 
 function startArcade() {
@@ -2672,6 +2730,432 @@ function finishArcade(session) {
 }
 
 /* =========================================================================
+   Invasores (Space Invaders)
+   ========================================================================= */
+
+/* The ship, the wave, the bullet and the lives are simulated in invaders.js;
+   this section owns the screen, the questions and the score. The screen reuses
+   the arcade's boxes (.arcade, .arcade__stage, .arcade__pad...), so the two
+   mini-games share one layout and one fullscreen treatment. */
+const INVADERS_COUNTDOWN_MS = 3000;
+/** The field is painted at twice its logical size, so the words stay crisp. */
+const INVADERS_PIXEL_SCALE = 2;
+const INVADERS_KEYS = { ArrowLeft: -1, ArrowRight: 1 };
+
+/**
+ * The form this question asks for. Level 1 only teaches infinitive and past; on
+ * level 2 the two forms alternate, and verbs whose participle looks like the
+ * past (cut, put) never waste a question on it.
+ */
+function invadersForm(verb, previous) {
+  if (!showsParticiple() || verb.participle === verb.past) return "past";
+  return previous === "participle" ? "past" : "participle";
+}
+
+/** What the simulation needs to place a wave: a verb, a form and its four word. */
+function invadersQuestion(target, form) {
+  return {
+    verb: target.base,
+    form,
+    label: FORM_LABELS[form],
+    options: wordsForForm(target, form)
+  };
+}
+
+function startInvaders() {
+  stopConfetti();
+  stopArcade();
+  stopInvaders();
+  const target = arcadeVerb();
+  state.invaders = {
+    game: InvadersGame.create(),
+    target,
+    form: invadersForm(target, "past"),
+    // The verbs already asked, newest first: the wave refuses to repeat them.
+    recent: [target.base],
+    score: 0,
+    // Until the countdown reaches zero there are no words on the board and no
+    // verb on top, so the round never starts behind the player's back.
+    countdown: INVADERS_COUNTDOWN_MS,
+    count: null,
+    started: false,
+    stopped: false,
+    // A phone gets the field on its own screen: no page around it to steal room.
+    fullscreen: wantsTouchControls(),
+    canvas: null,
+    frame: 0,
+    last: 0
+  };
+  state.view = "invaders";
+  render();
+  setInvadersFullscreen(state.invaders.fullscreen);
+}
+
+function stopInvaders() {
+  const session = state.invaders;
+  if (!session) return;
+  session.stopped = true;
+  if (session.frame) window.cancelAnimationFrame(session.frame);
+  session.frame = 0;
+  session.canvas = null;
+  state.invaders = null;
+  setInvadersFullscreen(false);
+}
+
+/**
+ * Fullscreen is a layout class first and a browser request second, exactly like
+ * the maze: the class alone already gives the field a screen of its own.
+ */
+function setInvadersFullscreen(on) {
+  const active = Boolean(on);
+  const wasFullscreen = document.body.classList.contains("arcade-fullscreen");
+  document.body.classList.toggle("arcade-fullscreen", active);
+  const toggle = view.querySelector("[data-action=invaders-fullscreen]");
+  if (toggle) toggle.setAttribute("aria-pressed", active ? "true" : "false");
+  if (state.invaders) state.invaders.fullscreen = active;
+
+  const root = document.documentElement;
+  try {
+    if (active) {
+      window.clearTimeout(fullscreenExitTimer);
+      if (root.requestFullscreen && document.fullscreenElement !== root) {
+        const asked = root.requestFullscreen({ navigationUI: "hide" });
+        if (asked && asked.catch) asked.catch(() => {});
+      }
+    } else if (wasFullscreen) {
+      fullscreenExitTimer = window.setTimeout(() => {
+        if (document.body.classList.contains("arcade-fullscreen")) return;
+        if (!document.fullscreenElement || !document.exitFullscreen) return;
+        const left = document.exitFullscreen();
+        if (left && left.catch) left.catch(() => {});
+      }, 0);
+    }
+  } catch (error) {
+    // Without the API the class above is already the fullscreen screen.
+  }
+  fitInvadersCanvas();
+}
+
+/**
+ * The field keeps its own 4:3 shape, so in fullscreen the canvas takes the
+ * biggest box with that shape that fits between the HUD and the keypad. The
+ * size travels in the same two custom properties the arcade uses.
+ */
+function fitInvadersCanvas() {
+  const stage = view.querySelector(".arcade__stage");
+  const canvas = stage ? stage.querySelector(".invaders__canvas") : null;
+  if (!canvas) return;
+  if (!document.body.classList.contains("arcade-fullscreen")) {
+    canvas.style.removeProperty("--arcade-canvas-width");
+    canvas.style.removeProperty("--arcade-canvas-height");
+    return;
+  }
+  const box = stage.getBoundingClientRect();
+  if (box.width < 1 || box.height < 1) return;
+  const { width, height } = InvadersGame.FIELD;
+  const scale = Math.min(box.width / width, box.height / height);
+  canvas.style.setProperty("--arcade-canvas-width", `${Math.floor(width * scale)}px`);
+  canvas.style.setProperty("--arcade-canvas-height", `${Math.floor(height * scale)}px`);
+}
+
+/** Only the live values are patched, so the loop never rebuilds the DOM. */
+function paintInvadersHud(session) {
+  const label = view.querySelector(".arcade__label");
+  if (label) label.textContent = `${session.form === "participle" ? "Participio" : "Pasado"} de`;
+  const verb = view.querySelector(".arcade__verb");
+  if (verb) verb.textContent = session.started && session.target ? session.target.base : "—";
+  const points = view.querySelector(".arcade__points");
+  if (points) points.textContent = session.score;
+  const lives = view.querySelector(".arcade__lives");
+  if (lives) {
+    const left = session.game.snapshot().lives;
+    lives.textContent = "❤".repeat(left) + "🖤".repeat(Math.max(0, InvadersGame.START_LIVES - left));
+    lives.setAttribute("aria-label", `${left} ${left === 1 ? "vida" : "vidas"}`);
+  }
+  const stars = document.getElementById("stat-stars");
+  if (stars) stars.textContent = profile.stars;
+}
+
+/** The seconds left on the overlay, repainted (and beeped) only on a new number. */
+function paintInvadersCountdown(session) {
+  const overlay = view.querySelector(".arcade__countdown");
+  if (!overlay) return;
+  const left = Math.max(1, Math.ceil(session.countdown / 1000));
+  if (left === session.count) return;
+  session.count = left;
+  overlay.textContent = String(left);
+  Sfx.tick();
+}
+
+function renderInvaders() {
+  const session = state.invaders;
+  if (!session) {
+    state.view = "home";
+    renderHome();
+    return;
+  }
+  view.innerHTML = `
+    <div class="arcade arcade--invaders">
+      <div class="arcade__hud">
+        <div class="arcade__target">
+          <span class="arcade__label">${session.form === "participle" ? "Participio" : "Pasado"} de</span>
+          <b class="arcade__verb" lang="en">—</b>
+        </div>
+        <div class="arcade__score" title="Aciertos de esta partida">⭐ <b class="arcade__points">0</b></div>
+        <div class="arcade__score arcade__lives" title="Vidas" aria-label="3 vidas">❤❤❤</div>
+      </div>
+      <div class="arcade__stage">${session.started ? "" : `<div class="arcade__countdown" role="status" aria-live="polite"></div>`}<canvas class="arcade__canvas invaders__canvas" role="img" aria-label="Campo de juego: la nave abajo y cuatro marcianos, cada uno con una palabra"></canvas></div>
+      <div class="arcade__pad invaders__pad" role="group" aria-label="Mover la nave y disparar">
+        <button class="arcade__key" data-invaders-move="left" aria-label="Izquierda">◀</button>
+        <button class="arcade__key invaders__key--fire" data-invaders-fire aria-label="Disparar">Fuego</button>
+        <button class="arcade__key" data-invaders-move="right" aria-label="Derecha">▶</button>
+      </div>
+      <p class="arcade__hint">Muévete con las flechas ← →, dispara con la barra espaciadora y derriba al marciano que lleva la forma correcta.</p>
+      <div class="arcade__actions">
+        <button class="btn btn--ghost" data-action="invaders-fullscreen" aria-pressed="${session.fullscreen ? "true" : "false"}">⤢ Pantalla completa</button>
+        <button class="btn btn--ghost" data-action="home">Salir al inicio</button>
+      </div>
+    </div>`;
+  paintInvadersHud(session);
+  if (!session.started) paintInvadersCountdown(session);
+  startInvadersStage(session);
+  fitInvadersCanvas();
+}
+
+function renderInvadersOver() {
+  const session = state.invaders;
+  if (!session) return;
+  view.innerHTML = `
+    <div class="arcade arcade--invaders">
+      <div class="arcade__hud">
+        <div class="arcade__target">
+          <span class="arcade__label">Te quedabas con</span>
+          <b class="arcade__verb" lang="en">${esc(session.target ? session.target.base : "")}</b>
+        </div>
+        <div class="arcade__score">⭐ <b>${session.score}</b></div>
+      </div>
+      <div class="arcade__over">
+        <span aria-hidden="true" style="font-size:2rem">🛸</span>
+        <h2>¡Te han invadido!</h2>
+        <p>Has derribado <b>${session.score}</b> ${session.score === 1 ? "palabra" : "palabras"}.</p>
+        <p>Tu récord en invasores: <b>${profile.invadersBest}</b></p>
+        <button class="btn btn--primary" data-action="play" data-mode="invaders">Jugar otra vez 🛸</button>
+        <button class="btn btn--ghost" data-action="home">Volver al inicio</button>
+      </div>
+    </div>`;
+}
+
+/**
+ * Mount the field: the canvas gets its backing size once, then a frame loop
+ * asks the simulation to advance and repaints. No engine is involved, so the
+ * loop, the clock and the painter are all here.
+ */
+function startInvadersStage(session) {
+  const canvas = view.querySelector(".invaders__canvas");
+  if (!canvas) return;
+  session.canvas = canvas;
+  canvas.width = InvadersGame.FIELD.width * INVADERS_PIXEL_SCALE;
+  canvas.height = InvadersGame.FIELD.height * INVADERS_PIXEL_SCALE;
+  session.last = 0;
+  paintInvaders(session);
+
+  const frame = (now) => {
+    if (session.stopped || state.invaders !== session || state.view !== "invaders") return;
+    const elapsed = session.last ? now - session.last : 0;
+    session.last = now;
+    stepInvaders(session, elapsed);
+    paintInvaders(session);
+    session.frame = window.requestAnimationFrame(frame);
+  };
+  session.frame = window.requestAnimationFrame(frame);
+}
+
+/** One frame: the simulation advances and its events become points, lives, sound. */
+function stepInvaders(session, elapsed) {
+  if (session.stopped) return;
+  // While the countdown runs the field is painted, but nothing moves yet.
+  if (!session.started) {
+    session.countdown -= elapsed;
+    if (session.countdown > 0) {
+      paintInvadersCountdown(session);
+      return;
+    }
+    beginInvadersRound(session);
+    return;
+  }
+  session.game.step(elapsed);
+  for (const event of session.game.drainEvents()) {
+    if (event.type === "hit-correct") downInvadersWord(session);
+    else if (event.type === "hit-wrong") invadersMissed(session);
+    else if (event.type === "life-lost") {
+      Sfx.wrong();
+      paintInvadersHud(session);
+    } else if (event.type === "game-over") finishInvaders(session);
+  }
+}
+
+/** Countdown over: the verb goes up, its clip plays once and the wave appears. */
+function beginInvadersRound(session) {
+  session.countdown = 0;
+  session.started = true;
+  const overlay = view.querySelector(".arcade__countdown");
+  if (overlay) overlay.remove();
+  session.game.startQuestion(invadersQuestion(session.target, session.form));
+  paintInvadersHud(session);
+  // The game already tells you which verb to look for: say it once, out loud.
+  Player.say([clipEntry(session.target, "base")], session.target.base);
+}
+
+/** The right alien went down: a point, a star and the next verb. */
+function downInvadersWord(session) {
+  const { target, form } = session;
+  session.score += 1;
+  recordAnswer(target, true);
+  awardStar("invaders");
+  saveProfile();
+  Sfx.right();
+
+  const next = arcadeNextVerb(session);
+  const nextForm = invadersForm(next, form);
+  // The form just shot, then the verb that replaces it: the second clip waits
+  // in the queue, so neither pronunciation cuts the other short.
+  Player.say(
+    [clipEntry(target, form), clipEntry(next, "base")],
+    `${sayForm(target, form)}. ${next.base}`
+  );
+  session.target = next;
+  session.form = nextForm;
+  session.game.startQuestion(invadersQuestion(next, nextForm));
+  paintInvadersHud(session);
+}
+
+/** A wrong word went down: no point, and the life is already on its way out. */
+function invadersMissed(session) {
+  recordAnswer(session.target, false);
+  paintInvadersHud(session);
+}
+
+function finishInvaders(session) {
+  if (session.stopped) return;
+  session.stopped = true;
+  if (session.frame) window.cancelAnimationFrame(session.frame);
+  session.frame = 0;
+  profile.invadersBest = Math.max(profile.invadersBest || 0, session.score);
+  profile.rounds += 1;
+  saveProfile();
+  Sfx.finish();
+  // Let the last frame be seen before the score card replaces the field.
+  window.setTimeout(() => {
+    if (state.invaders !== session || state.view !== "invaders") return;
+    renderInvadersOver();
+  }, 700);
+}
+
+/**
+ * The field is painted in logical units: the transform does the doubling, so
+ * every number below is the same one invaders.js uses.
+ */
+function paintInvaders(session) {
+  const canvas = session.canvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const { width, height } = InvadersGame.FIELD;
+  const snapshot = session.game.snapshot();
+
+  ctx.setTransform(INVADERS_PIXEL_SCALE, 0, 0, INVADERS_PIXEL_SCALE, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  // A band of night sky, and a soft line the ship defends.
+  const sky = ctx.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, "#0a1024");
+  sky.addColorStop(1, "#101b38");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "rgba(56, 189, 248, 0.18)";
+  ctx.fillRect(0, snapshot.shipTop + InvadersGame.SHIP_HEIGHT + 6, width, 1);
+
+  // The aliens, each with its word on it.
+  for (const alien of snapshot.aliens) {
+    if (!alien.alive && !alien.dying) continue;
+    const dying = alien.dying;
+    ctx.beginPath();
+    roundRect(ctx, alien.x, alien.y, alien.width, alien.height, 8);
+    ctx.fillStyle = dying ? "rgba(248, 113, 113, 0.25)" : "rgba(56, 189, 248, 0.14)";
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = dying ? "#f87171" : "rgba(56, 189, 248, 0.7)";
+    ctx.stroke();
+
+    // Two antennae and three legs: a martian, not just a signboard.
+    ctx.strokeStyle = dying ? "rgba(248, 113, 113, 0.8)" : "rgba(56, 189, 248, 0.55)";
+    ctx.beginPath();
+    ctx.moveTo(alien.x + 16, alien.y);
+    ctx.lineTo(alien.x + 11, alien.y - 7);
+    ctx.moveTo(alien.x + alien.width - 16, alien.y);
+    ctx.lineTo(alien.x + alien.width - 11, alien.y - 7);
+    for (const leg of [0.25, 0.5, 0.75]) {
+      const legX = alien.x + alien.width * leg;
+      ctx.moveTo(legX, alien.y + alien.height);
+      ctx.lineTo(legX, alien.y + alien.height + 5);
+    }
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = dying ? "#fecaca" : "#e8f4ff";
+    let size = 15;
+    const longest = alien.width - 12;
+    ctx.font = `700 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    while (size > 8 && ctx.measureText(alien.word).width > longest) {
+      size -= 1;
+      ctx.font = `700 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    }
+    ctx.fillText(alien.word, alien.x + alien.width / 2, alien.y + alien.height / 2 + 1);
+  }
+
+  // The bullet, thin and bright so it reads at a glance.
+  if (snapshot.bulletActive) {
+    ctx.fillStyle = "#fde68a";
+    ctx.fillRect(
+      snapshot.bulletX - InvadersGame.BULLET_WIDTH / 2,
+      snapshot.bulletY,
+      InvadersGame.BULLET_WIDTH,
+      InvadersGame.BULLET_HEIGHT
+    );
+  }
+
+  // The ship: a small hull with its cannon pointing up.
+  const shipWidth = InvadersGame.SHIP_WIDTH;
+  const shipLeft = snapshot.shipX - shipWidth / 2;
+  const shipTop = snapshot.shipTop;
+  ctx.beginPath();
+  roundRect(ctx, shipLeft, shipTop + 7, shipWidth, InvadersGame.SHIP_HEIGHT - 7, 6);
+  ctx.fillStyle = "#22d3ee";
+  ctx.fill();
+  ctx.fillStyle = "#a5f3fc";
+  ctx.fillRect(snapshot.shipX - 2, shipTop, 4, 9);
+  ctx.fillStyle = "rgba(34, 211, 238, 0.35)";
+  ctx.fillRect(shipLeft - 4, shipTop + InvadersGame.SHIP_HEIGHT - 3, 8, 3);
+  ctx.fillRect(shipLeft + shipWidth - 4, shipTop + InvadersGame.SHIP_HEIGHT - 3, 8, 3);
+}
+
+/** Canvas has no rounded rectangle of its own in every browser. */
+function roundRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/* =========================================================================
    Round interaction
    ========================================================================= */
 
@@ -2820,6 +3304,10 @@ document.addEventListener("click", (event) => {
     setArcadeFullscreen(!document.body.classList.contains("arcade-fullscreen"));
     return;
   }
+  if (action === "invaders-fullscreen") {
+    setInvadersFullscreen(!document.body.classList.contains("arcade-fullscreen"));
+    return;
+  }
   if (action === "set-level") { setLevel(Number(trigger.dataset.level)); return; }
 
   if (action === "speak") {
@@ -2921,6 +3409,22 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
+  if (state.view === "invaders") {
+    if (state.invaders && !state.invaders.stopped) {
+      const step = INVADERS_KEYS[event.key];
+      if (step) {
+        state.invaders.game.move(step);
+        event.preventDefault();
+      } else if (event.key === " " || event.key === "Spacebar") {
+        // Space on a focused button belongs to that button.
+        if (target && target.closest("button")) return;
+        state.invaders.game.fire();
+        event.preventDefault();
+      }
+    }
+    return;
+  }
+
   if (state.view === "study") {
     if (event.key === "ArrowRight") { state.study.index = Math.min(verbsOfLevel().length - 1, state.study.index + 1); renderStudy(); }
     if (event.key === "ArrowLeft") { state.study.index = Math.max(0, state.study.index - 1); renderStudy(); }
@@ -2993,24 +3497,102 @@ view.addEventListener("pointercancel", (event) => {
   if (arcadeSwipe && event.pointerId === arcadeSwipe.id) arcadeSwipe = null;
 });
 
+/* =========================================================================
+   Fingers on the invaders screen
+   ========================================================================= */
+
+/** Hold a key to move, tap Fuego to shoot, drag the field to slide the ship. */
+let invadersHold = 0;
+let invadersDrag = null;
+
+function invadersMoveShipTo(session, clientX) {
+  const canvas = session.canvas;
+  if (!canvas) return;
+  const box = canvas.getBoundingClientRect();
+  if (box.width < 1) return;
+  session.game.placeShip(((clientX - box.left) / box.width) * InvadersGame.FIELD.width);
+}
+
+view.addEventListener("pointerdown", (event) => {
+  const session = state.invaders;
+  if (state.view !== "invaders" || !session || session.stopped || !session.started) return;
+  // A real finger also reveals the keypad on a laptop with a touchscreen.
+  if (event.pointerType === "touch") document.body.classList.add("is-touch");
+
+  const target = event.target instanceof Element ? event.target : null;
+  const moveKey = target ? target.closest("[data-invaders-move]") : null;
+  if (moveKey) {
+    event.preventDefault();
+    invadersHold = event.pointerId;
+    session.game.move(moveKey.dataset.invadersMove === "left" ? -1 : 1);
+    return;
+  }
+
+  const fireKey = target ? target.closest("[data-invaders-fire]") : null;
+  if (fireKey) {
+    event.preventDefault();
+    session.game.fire();
+    return;
+  }
+
+  const stage = target ? target.closest(".arcade__stage") : null;
+  if (!stage) return;
+  event.preventDefault();
+  // One finger owns the drag: a second one landing on the field is not a move.
+  if (invadersDrag) return;
+  invadersDrag = { id: event.pointerId };
+  invadersMoveShipTo(session, event.clientX);
+});
+
+view.addEventListener("pointermove", (event) => {
+  if (!invadersDrag || event.pointerId !== invadersDrag.id) return;
+  const session = state.invaders;
+  if (state.view !== "invaders" || !session) return;
+  invadersMoveShipTo(session, event.clientX);
+});
+
+function releaseInvaders(event) {
+  const session = state.invaders;
+  if (invadersDrag && event.pointerId === invadersDrag.id) invadersDrag = null;
+  if (invadersHold && event.pointerId === invadersHold) {
+    invadersHold = 0;
+    if (state.view === "invaders" && session) session.game.move(0);
+  }
+}
+
+view.addEventListener("pointerup", releaseInvaders);
+view.addEventListener("pointercancel", releaseInvaders);
 /* Leaving the browser's fullscreen with Escape leaves the layout with it. */
 document.addEventListener("fullscreenchange", () => {
   if (document.fullscreenElement) {
-    // A real fullscreen has a bigger viewport: the maze has room to grow.
+    // A real fullscreen has a bigger viewport: the field has room to grow.
     fitArcadeCanvas();
+    fitInvadersCanvas();
     return;
   }
-  if (document.body.classList.contains("arcade-fullscreen")) setArcadeFullscreen(false);
+  if (!document.body.classList.contains("arcade-fullscreen")) return;
+  if (state.view === "invaders") setInvadersFullscreen(false);
+  else setArcadeFullscreen(false);
 });
 
-/* A phone turned sideways gets a different box for the maze. */
+/* A phone turned sideways gets a different box for the mini-game. */
 function refitArcade() {
-  if (state.view !== "arcade") return;
-  fitArcadeCanvas();
+  if (state.view === "arcade") fitArcadeCanvas();
+  else if (state.view === "invaders") fitInvadersCanvas();
 }
 
 window.addEventListener("resize", refitArcade);
 window.addEventListener("orientationchange", () => window.setTimeout(refitArcade, 150));
+
+document.addEventListener("keyup", (event) => {
+  if (state.view !== "invaders" || !state.invaders) return;
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") state.invaders.game.move(0);
+});
+
+/* A tab switch eats the keyup: the ship must not keep flying on its own. */
+window.addEventListener("blur", () => {
+  if (state.view === "invaders" && state.invaders) state.invaders.game.move(0);
+});
 
 document.body.classList.toggle("is-touch", wantsTouchControls());
 
@@ -3047,6 +3629,7 @@ Player.probe(clipOf(VERBS[0], "base")).then((ok) => {
 
 const initial = location.hash.slice(1);
 if (initial === "arcade") startArcade();
+else if (initial === "invaders") startInvaders();
 else if (MODES[initial]) startRound(initial);
 else if (initial === "study") { state.view = "study"; render(); }
 else render();
