@@ -1,0 +1,9 @@
+# Dependencies (only used by the offline audio generator of the English activity)
+node_modules/
+vendor/node_modules/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.kate-swp

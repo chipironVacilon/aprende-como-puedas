@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aprende como puedas · Ejercicios y juegos para Primaria</title>
+<meta name="description" content="Ejercicios y juegos para aprender en Primaria: inglés, francés y más. Se abre en el navegador, sin instalar nada y sin conexión.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<style>
+  :root {
+    --bg: #0b1020;
+    --card: rgba(255, 255, 255, 0.055);
+    --card-strong: rgba(255, 255, 255, 0.09);
+    --line: rgba(255, 255, 255, 0.12);
+    --ink: #eef2ff;
+    --muted: #9aa8c7;
+    --gold: #ffd166;
+    --violet: #8b7cff;
+    --cyan: #22d3ee;
+    --green: #4ade80;
+    --amber: #ffb347;
+    --radius: 20px;
+    --shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background:
+      radial-gradient(1100px 620px at 12% -12%, #2a1a5e 0%, transparent 62%),
+      radial-gradient(900px 520px at 92% -6%, #0b3b53 0%, transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, #1b1240 0%, transparent 65%),
+      var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI Variable Display", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+    border-radius: 16px;
+  }
+
+  .app {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: 22px 16px calc(34px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- header ---------- */
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .site-header__logo {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 auto;
+    display: block;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+  }
+
+  .site-header__text { display: grid; gap: 2px; min-width: 0; }
+
+  .eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .site-header h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 5.4vw, 2rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .site-header h1 em {
+    font-style: normal;
+    background: linear-gradient(120deg, #a78bfa, #22d3ee 72%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- intro ---------- */
+
+  .lead {
+    margin: 0 0 20px;
+    max-width: 52ch;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- menu tree ---------- */
+
+  .tree, .tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .tree > li > details > ul,
+  .tree > li > .leaf {
+    margin-top: 10px;
+  }
+
+  /* Nested level: a slim rail carries the depth without a second card. */
+  .tree ul {
+    margin-left: 6px;
+    padding-left: 16px;
+    border-left: 2px solid var(--line);
+  }
+
+  .node {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .node[open] { background: var(--card); }
+
+  /* The clickable row of the card: one big target, keyboard reachable. */
+  .node__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+    border-left: 4px solid var(--accent, var(--violet));
+    transition: background 0.15s ease;
+  }
+
+  .node__head::-webkit-details-marker { display: none; }
+  .node__head::marker { content: ""; }
+  .node__head:hover { background: var(--card-strong); }
+
+  .node__body {
+    display: grid;
+    gap: 1px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .node__label {
+    font-size: 1.06rem;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  .node__meta {
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+
+  .node__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--accent, var(--violet)) 20%, transparent);
+    color: color-mix(in srgb, var(--accent, var(--violet)) 55%, #ffffff);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .node__chev {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 auto;
+    margin-left: 2px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(-45deg) translate(-1px, -1px);
+    transition: transform 0.18s ease;
+  }
+
+  .node[open] > .node__head .node__chev {
+    transform: rotate(45deg) translate(-2px, -2px);
+  }
+
+  .node__panel { padding: 0 14px 14px; }
+
+  .depth-1 { --accent: var(--violet); }
+  .depth-2 { --accent: var(--cyan); }
+  .depth-3 { --accent: var(--gold); }
+  .depth-4 { --accent: var(--green); }
+  .depth-4.type-fr { --accent: var(--amber); }
+
+  /* ---------- leaves ---------- */
+
+  .leaf {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent, var(--green));
+    border-radius: 16px;
+    background: var(--card);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  a.leaf { transition: transform 0.15s ease, background 0.15s ease; }
+  a.leaf:hover { background: var(--card-strong); transform: translateY(-2px); }
+  a.leaf:active { transform: translateY(0); }
+
+  .leaf__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent, var(--green)) 20%, transparent);
+    font-size: 1.3rem;
+  }
+
+  .leaf__body { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
+  .leaf__title { font-weight: 800; font-size: 1.02rem; }
+  .leaf__meta { font-size: 0.84rem; color: var(--muted); }
+
+  .leaf__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #a78bfa, #7c5cff);
+    color: #0b1020;
+    font-weight: 800;
+    font-size: 0.92rem;
+    white-space: nowrap;
+  }
+
+  .leaf--soon {
+    border-style: dashed;
+    border-left-style: solid;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .leaf--soon .leaf__icon {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+  }
+
+  .leaf--soon .leaf__title { color: #c9d2e6; }
+
+  .tag-soon {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- footer ---------- */
+
+  .site-footer {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  .site-footer p { margin: 0; }
+
+  @media (max-width: 460px) {
+    /* Narrow screens: keep the rails but give the content its width back. */
+    .tree ul { margin-left: 2px; padding-left: 10px; }
+    .node__panel { padding: 0 10px 10px; }
+    .leaf { flex-wrap: wrap; padding: 12px; }
+    .leaf__body { flex-basis: calc(100% - 56px); }
+    .leaf__go { margin-left: 56px; flex: 1 1 auto; justify-content: center; }
+    .tag-soon { margin-left: 56px; }
+    .node__head { gap: 10px; padding: 12px 12px; }
+    .node__chip { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="site-header">
+    <img class="site-header__logo" src="assets/logo.svg" alt="Un lápiz atado con un nudo" width="58" height="58">
+    <div class="site-header__text">
+      <p class="eyebrow">Ejercicios y juegos</p>
+      <h1>Aprende como <em>puedas</em></h1>
+    </div>
+  </header>
+
+  <main>
+    <p class="lead">Elige el curso, la asignatura y la actividad. Toca cada tarjeta para desplegarla o plegarla: todo se abre aquí mismo, sin instalar nada ni tener conexión.</p>
+
+    <nav aria-label="Contenidos por curso">
+      <ul class="tree">
+        <li>
+          <details class="node depth-1" open>
+            <summary class="node__head">
+              <span class="node__chip">Curso</span>
+              <span class="node__body">
+                <span class="node__label">Primaria</span>
+                <span class="node__meta">De 6 a 12 años</span>
+              </span>
+              <span class="node__chev" aria-hidden="true"></span>
+            </summary>
+            <div class="node__panel">
+              <ul>
+                <li>
+                  <details class="node depth-2" open>
+                    <summary class="node__head">
+                      <span class="node__chip">Nivel</span>
+                      <span class="node__body">
+                        <span class="node__label">5º</span>
+                        <span class="node__meta">Dos asignaturas</span>
+                      </span>
+                      <span class="node__chev" aria-hidden="true"></span>
+                    </summary>
+                    <div class="node__panel">
+                      <ul>
+                        <li>
+                          <details class="node depth-3" open>
+                            <summary class="node__head">
+                              <span class="node__chip">Asignatura</span>
+                              <span class="node__body">
+                                <span class="node__label">Inglés</span>
+                                <span class="node__meta">Una actividad</span>
+                              </span>
+                              <span class="node__chev" aria-hidden="true"></span>
+                            </summary>
+                            <div class="node__panel">
+                              <a class="leaf depth-4" href="primaria/5/ingles/verbos-irregulares/index.html">
+                                <span class="leaf__icon" aria-hidden="true">✏️</span>
+                                <span class="leaf__body">
+                                  <span class="leaf__title">Verbos irregulares</span>
+                                  <span class="leaf__meta">61 verbos · tarjetas, quiz, frases, escucha y arcade</span>
+                                </span>
+                                <span class="leaf__go">Empezar <span aria-hidden="true">→</span></span>
+                              </a>
+                            </div>
+                          </details>
+                        </li>
+                        <li>
+                          <details class="node depth-3 type-fr" open>
+                            <summary class="node__head">
+                              <span class="node__chip">Asignatura</span>
+                              <span class="node__body">
+                                <span class="node__label">Francés</span>
+                                <span class="node__meta">Una actividad, todavía vacía</span>
+                              </span>
+                              <span class="node__chev" aria-hidden="true"></span>
+                            </summary>
+                            <div class="node__panel">
+                              <div class="leaf leaf--soon depth-4 type-fr">
+                                <span class="leaf__icon" aria-hidden="true">🎨</span>
+                                <span class="leaf__body">
+                                  <span class="leaf__title">Colores</span>
+                                  <span class="leaf__meta">Todavía no hay actividades. Llegarán pronto.</span>
+                                </span>
+                                <span class="tag-soon">Pronto</span>
+                              </div>
+                            </div>
+                          </details>
+                        </li>
+                      </ul>
+                    </div>
+                  </details>
+                </li>
+              </ul>
+            </div>
+          </details>
+        </li>
+      </ul>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <p>Hecho para practicar en casa. Todo funciona con doble clic en la página: no hace falta conexión.</p>
+  </footer>
+
+</div>
+</body>
+</html>
