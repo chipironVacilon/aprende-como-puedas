@@ -20,8 +20,10 @@ S3. El contenido es el correcto: los once colores básicos en francés con su co
     ninguno, escritos como se enseñan en clase (`vingt et un`, `vingt-deux`, … `trente`).
 
 S4. Cada actividad enseña de verdad, no sólo muestra una lista: se puede estudiar, practicar
-    con preguntas y comprobar la respuesta, con acierto y error explicados (y la palabra
-    francesa se puede escuchar cuando el equipo tiene voz en francés).
+    con preguntas y comprobar la respuesta, con acierto y error explicados. La palabra
+    francesa se puede escuchar con **grabaciones MP3 incluidas en la actividad**, generadas
+    igual que en la actividad de inglés (voz neuronal de Edge + ffmpeg), nunca con la voz
+    del navegador. Sin las grabaciones, el modo "Escucha" queda apagado y se avisa.
 
 S5. El menú del portal queda coherente: la tarjeta "Pronto" de Colores pasa a ser un enlace
     real, aparece Números 1-30, el contador de Francés dice "2 actividades" y no queda
@@ -39,6 +41,7 @@ S6. Igual que el resto de la web: se abre con doble clic en su `index.html`, sin
 | T3 | Actividad "Números 1-30" en `primaria/5/frances/numeros/index.html` | S2, S3, S4, S6 | inline | 687942e |
 | T4 | Portal y README: dos enlaces reales, contador y árbol de contenidos | S5 | inline | 5dad2be |
 | T5 | Verificación en Chromium real: contenido, modos, móvil, sin errores | S1-S6 | inline | 48fab0b |
+| T6 | Grabar las 41 palabras en MP3, generador y páginas que reproducen los ficheros | S4, S6 | inline | 5364cb1 |
 
 ## Log
 
@@ -91,3 +94,25 @@ L8 (decisión, corregida): el script de verificación de L5 sí se versiona, en
 detectaría nada (riesgo 6). Se recortó a la parte que importa —contenido, quiz en los dos
 sentidos, escritura tolerante, parejas, escucha con voz inyectada, portal, 390 px y el caso
 sin voz— y se ejecutó tres veces seguidas: «82 comprobaciones OK / Todo verde» las tres.
+
+L9 (petición del usuario, literal, corrige L4):
+
+> para las voces no uses la voz del navegador. Genera los MP3 igual que en la activiad de inglés
+
+L10 (evidencia, T6): se copió la cadena de la actividad de inglés (`msedge-tts` +
+`ffmpeg` con `loudnorm` y recorte de silencios) en `primaria/5/frances/scripts/generate-audio.mjs`,
+con `package.json` y `package-lock.json` propios y `node_modules` ignorado. Voz
+`fr-FR-DeniseNeural` a `-8%` de velocidad. Seis de los 41 clips se midieron con `ffprobe`:
+«un» 0,235 s, «blanc» 0,418 s, «trente» 0,522 s, «rouge» 0,601 s, «dix-sept» 0,679 s y
+«vingt-et-un» 0,836 s; 41 clips, 172 KB en total, cero errores. Toda la voz del navegador
+(`speechSynthesis`) salió de las dos páginas: ahora un `<audio>` pide
+`assets/audio/<palabra>.mp3`, y si falta la carpeta `assets` una grabación de prueba lo
+detecta y apaga «Escucha» con su aviso. La comprobación de navegador pasó a 91 y quedó
+verde tres veces seguidas; los clips se cargan enteros (`readyState` 4, duración real) y
+se comprueba que la orden de `play()` llega con el fichero correcto, porque este Chromium
+sin salida de audio no puede sonar.
+
+L11 (rebanada): las grabaciones son binarios y el generador es una unidad funcional con la
+página que las reproduce; van en un commit (`5364cb1`), la comprobación en otro y la
+documentación en otro. La rama `feat/frances-colores-numeros` acumula siete commits; el push
+y el PR siguen siendo decisión del usuario.

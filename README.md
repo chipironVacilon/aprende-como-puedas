@@ -34,6 +34,9 @@ assets/icon-180.png                         icono para móvil y tableta
 primaria/5/ingles/verbos-irregulares/       la actividad de inglés, completa
 primaria/5/frances/colores/                 los colores en francés
 primaria/5/frances/numeros/                 los números del 1 al 30 en francés
+primaria/5/frances/colores/assets/audio/    las grabaciones de los colores
+primaria/5/frances/numeros/assets/audio/    las grabaciones de los números
+primaria/5/frances/scripts/generate-audio.mjs  regenera esas grabaciones
 primaria/5/frances/verificar.mjs            comprobación de las dos actividades
 ```
 
@@ -93,21 +96,34 @@ tienen la misma estructura: una cabecera con el enlace de vuelta al menú, el pr
   (del número a la palabra y de la palabra al número), escritura con teclado y escucha.
   La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
 
-El sonido lo pone la voz francesa del navegador (`speechSynthesis`), así que no hay
-audios que descargar ni conexión que necesitar. Si el equipo no tiene ninguna voz en
-francés, las actividades funcionan igual sin sonido y lo explican; al añadir una voz al
-sistema, el modo "Escucha" se activa solo.
+El sonido son grabaciones MP3 incluidas en cada actividad, como en la actividad de
+inglés: se oyen sin conexión y suenan igual en cualquier equipo, sin depender de las voces
+del sistema. Voz `fr-FR-DeniseNeural` de Edge, algo más lenta de lo normal, convertida a
+mono 32 kbps con normalización de volumen y recorte de silencios. Si alguien copia la
+página sin la carpeta `assets`, el modo "Escucha" queda apagado y se avisa; las demás
+actividades siguen funcionando.
+
+Para regenerar las grabaciones (necesita internet y `npm install`, una sola vez):
+
+```bash
+cd primaria/5/frances
+npm install
+node scripts/generate-audio.mjs            # genera las que falten
+node scripts/generate-audio.mjs --list     # dice qué hay y qué falta
+node scripts/generate-audio.mjs --force dix-sept   # regenera una palabra
+```
 
 El progreso se guarda en el propio navegador (`localStorage`); si está bloqueado, se
 juega igual y no se guarda nada.
 
 Las dos actividades tienen una comprobación de navegador, sin dependencias (sólo necesita
 un Chromium instalado). Abre las tres páginas, juega a los modos, revisa las palabras y los
-enlaces, mira que nada desborde a 390 px y falla si algo lanza un error:
+enlaces, comprueba que cada tarjeta pide su grabación y que el MP3 se carga entero, mira
+que nada desborde a 390 px y falla si algo lanza un error:
 
 ```bash
 cd primaria/5/frances
-node verificar.mjs                    # 82 comprobaciones
+node verificar.mjs                    # 91 comprobaciones
 node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
 ```
 
