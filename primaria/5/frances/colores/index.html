@@ -411,16 +411,58 @@
 
   .color-card {
     display: grid;
-    gap: 6px;
+    gap: 8px;
     padding: 10px;
     border: 1px solid var(--line);
     border-radius: 16px;
     background: var(--card);
+  }
+
+  .color-card:hover { background: var(--card-strong); }
+
+  .color-card__main {
+    display: grid;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
     text-align: center;
     cursor: pointer;
   }
 
-  .color-card:hover { background: var(--card-strong); }
+  .color-card__main:focus-visible { outline-offset: 5px; }
+
+  .phrase {
+    display: grid;
+    gap: 2px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d5dcef;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .phrase:hover { background: rgba(255, 255, 255, 0.1); }
+
+  .phrase__fr { line-height: 1.25; }
+
+  .phrase__es {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .feedback__phrase {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
 
   .color-card__swatch {
     height: 64px;
@@ -526,25 +568,13 @@
   <p class="footnote" id="footnote"></p>
 </div>
 
+<script src="datos.js"></script>
 <script>
 (function () {
   "use strict";
 
-  // Los once colores que se enseñan en clase, con su color real y su traducción.
-  const COLORS = [
-    { fr: "rouge", es: "rojo", hex: "#ef4444" },
-    { fr: "bleu", es: "azul", hex: "#3b82f6" },
-    { fr: "vert", es: "verde", hex: "#22c55e" },
-    { fr: "jaune", es: "amarillo", hex: "#facc15" },
-    { fr: "orange", es: "naranja", hex: "#fb923c" },
-    { fr: "violet", es: "violeta", hex: "#a855f7" },
-    { fr: "rose", es: "rosa", hex: "#f472b6" },
-    { fr: "marron", es: "marrón", hex: "#8a5a2b" },
-    { fr: "gris", es: "gris", hex: "#9ca3af" },
-    { fr: "noir", es: "negro", hex: "#1f2937" },
-    { fr: "blanc", es: "blanco", hex: "#f8fafc" }
-  ];
-
+  // Los colores viven en datos.js, el mismo fichero del que salen las
+  // grabaciones: así la página y el audio no se pueden separar.
   const KEY = "acp.frances.colores";
   const PROBE_WORD = COLORS[0].fr;
   const QUIZ_LENGTH = 10;
@@ -598,10 +628,10 @@
       return word.replace(/\s+/g, "-");
     },
 
-    play(word) {
+    play(word, kind) {
       const element = this.element;
       element.pause();
-      element.src = `assets/audio/${this.slug(word)}.mp3`;
+      element.src = `assets/audio/${this.slug(word)}${kind === "phrase" ? "-phrase" : ""}.mp3`;
       try {
         element.currentTime = 0;
       } catch (error) {
@@ -721,15 +751,22 @@
         <button class="back" data-action="home">← Menú</button>
         <h1 tabindex="-1">Tarjetas</h1>
       </div>
-      <p class="lead">Toca una tarjeta para escuchar cómo se dice.</p>
+      <p class="lead">Toca un color para escuchar cómo se dice, o su frase para oírla entera.</p>
       <div class="colors-grid">
         ${COLORS.map((color) => `
-          <button class="color-card" data-action="speak" data-say="${color.fr}"
-            aria-label="${color.fr}, ${color.es}">
-            <span class="color-card__swatch" style="background:${color.hex}" aria-hidden="true"></span>
-            <span class="color-card__fr">${color.fr}</span>
-            <span class="color-card__es">${color.es}</span>
-          </button>`).join("")}
+          <article class="color-card">
+            <button class="color-card__main" data-action="speak" data-say="${color.fr}"
+              aria-label="${color.fr}, ${color.es}">
+              <span class="color-card__swatch" style="background:${color.hex}" aria-hidden="true"></span>
+              <span class="color-card__fr">${color.fr}</span>
+              <span class="color-card__es">${color.es}</span>
+            </button>
+            <button class="phrase" data-action="speak" data-say="${color.fr}" data-kind="phrase"
+              aria-label="Escuchar la frase: ${color.phrase.fr} ${color.phrase.es}">
+              <span class="phrase__fr"><span aria-hidden="true">🔊</span> ${color.phrase.fr}</span>
+              <span class="phrase__es">${color.phrase.es}</span>
+            </button>
+          </article>`).join("")}
       </div>
       <p class="lead">En francés el color va <b>detrás</b> del nombre: <i>une fleur rouge</i>
         es una flor roja.</p>`;
@@ -807,10 +844,16 @@
       <div class="feedback" data-tone="${right ? "ok" : "bad"}" aria-live="polite">
         <strong>${right ? "¡Bien!" : "Casi…"}</strong>
         <span><b>${target.fr}</b> es ${target.es}.</span>
+        <span class="feedback__phrase">${target.phrase.fr} · ${target.phrase.es}</span>
       </div>
-      <button class="primary" data-action="next" data-autofocus>
-        ${quiz.index + 1 < quiz.total ? "Siguiente →" : "Ver resultado →"}
-      </button>`;
+      <div class="actions">
+        <button class="speak" data-action="speak" data-say="${target.fr}" data-kind="phrase">
+          🔊 La frase
+        </button>
+        <button class="primary" data-action="next" data-autofocus>
+          ${quiz.index + 1 < quiz.total ? "Siguiente →" : "Ver resultado →"}
+        </button>
+      </div>`;
   }
 
   function quizHtml() {
@@ -1061,7 +1104,7 @@
     if (action === "again") return startQuiz(trigger.dataset.mode === "listen");
     if (action === "flip") return flip(Number(trigger.dataset.index));
     if (action === "speak") {
-      Sonido.play(trigger.dataset.say);
+      Sonido.play(trigger.dataset.say, trigger.dataset.kind);
       return;
     }
   });

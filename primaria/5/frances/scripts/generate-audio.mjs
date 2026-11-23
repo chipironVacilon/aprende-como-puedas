@@ -8,17 +8,19 @@
  *   node scripts/generate-audio.mjs --force rouge   # regenerate one word
  *   node scripts/generate-audio.mjs --list          # show what would be generated
  *
- * Produces one clip per word, named after the word:
+ * Every item gets two clips: the word and one short sentence that uses it:
  *
- *   primaria/5/frances/colores/assets/audio/rouge.mp3
- *   primaria/5/frances/numeros/assets/audio/vingt-et-un.mp3
+ *   colores/assets/audio/rouge.mp3
+ *   colores/assets/audio/rouge-phrase.mp3
+ *   numeros/assets/audio/vingt-et-un.mp3
+ *   numeros/assets/audio/vingt-et-un-phrase.mp3
+ *
+ * The words and sentences are read from each activity's datos.js, the same
+ * file the page uses, so the recordings can never drift from what is shown.
  *
  * The speech is requested at a slightly slower rate, which reads better for a
  * child. ffmpeg then converts to mono 32 kbps MP3 with loudness normalisation
  * and silence trimming, exactly like the English activity.
- *
- * The word lists here are the single source for the recordings; the browser
- * check (verificar.mjs) fails if a page asks for a clip that does not exist.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
@@ -28,10 +30,11 @@ import { createRequire } from "node:module";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const activityRoot = resolve(here, "..");
+const requireFrom = createRequire(join(activityRoot, "noop.js"));
 
 let MsEdgeTTS, OUTPUT_FORMAT;
 try {
-  ({ MsEdgeTTS, OUTPUT_FORMAT } = createRequire(join(activityRoot, "noop.js"))("msedge-tts"));
+  ({ MsEdgeTTS, OUTPUT_FORMAT } = requireFrom("msedge-tts"));
 } catch {
   console.error(
     "Falta la dependencia msedge-tts. Instálala desde primaria/5/frances\n" +
@@ -41,23 +44,13 @@ try {
   process.exit(1);
 }
 
-const COLORS = [
-  "rouge", "bleu", "vert", "jaune", "orange", "violet", "rose", "marron",
-  "gris", "noir", "blanc"
-];
+const COLOR_LIST = requireFrom(join(activityRoot, "colores", "datos.js"));
+const NUMBER_LIST = requireFrom(join(activityRoot, "numeros", "datos.js"));
 
-const NUMBERS = [
-  "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
-  "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept",
-  "dix-huit", "dix-neuf", "vingt", "vingt et un", "vingt-deux", "vingt-trois",
-  "vingt-quatre", "vingt-cinq", "vingt-six", "vingt-sept", "vingt-huit",
-  "vingt-neuf", "trente"
-];
-
-/** Words of one activity, with the file name the page will ask for. */
+/** Items of one activity, with the two clips every item needs. */
 const ACTIVITIES = [
-  { name: "colores", words: COLORS },
-  { name: "numeros", words: NUMBERS }
+  { name: "colores", items: COLOR_LIST },
+  { name: "numeros", items: NUMBER_LIST }
 ];
 
 const VOICE = process.env.TTS_VOICE || "fr-FR-DeniseNeural";
@@ -86,13 +79,27 @@ if (!ffmpegAvailable) {
   process.exit(1);
 }
 
+/** The word and the sentence of one item. */
+const clipsFor = (item) => [
+  { file: `${slug(item.fr)}.mp3`, text: item.fr, kind: "palabra" },
+  { file: `${slug(item.fr)}-phrase.mp3`, text: item.phrase.fr, kind: "frase" }
+];
+
 const jobs = [];
 for (const activity of ACTIVITIES) {
   const dir = join(activityRoot, activity.name, "assets", "audio");
-  for (const word of activity.words) {
-    const target = join(dir, `${slug(word)}.mp3`);
-    const forced = forceTargets.length === 0 || forceTargets.includes(slug(word)) || forceTargets.includes(word);
-    if (forced && !existsSync(target)) jobs.push({ activity, word, target, dir });
+  for (const item of activity.items) {
+    for (const clip of clipsFor(item)) {
+      const target = join(dir, clip.file);
+      const forced =
+        forceTargets.length === 0 ||
+        forceTargets.includes(slug(item.fr)) ||
+        forceTargets.includes(item.fr) ||
+        forceTargets.includes(clip.file);
+      if (forced && !existsSync(target)) {
+        jobs.push({ activity, item, clip, target, dir });
+      }
+    }
   }
 }
 
@@ -108,18 +115,19 @@ const countAudio = (dir) => {
   return { clips, bytes };
 };
 
-const total = ACTIVITIES.reduce((sum, activity) => sum + activity.words.length, 0);
-console.log(`Voz: ${VOICE} · palabras: ${total} · clips a generar: ${jobs.length}`);
+const totalClips = ACTIVITIES.reduce((sum, activity) => sum + activity.items.length * 2, 0);
+console.log(`Voz: ${VOICE} · clips previstos: ${totalClips} · a generar: ${jobs.length}`);
 
 if (listOnly) {
   for (const job of jobs.slice(0, 12)) {
-    console.log(`  ${job.activity.name}/${slug(job.word)}.mp3  "${job.word}"`);
+    console.log(`  ${job.activity.name}/${job.clip.file}  "${job.clip.text}"`);
   }
   if (jobs.length > 12) console.log(`  … y ${jobs.length - 12} más`);
   for (const activity of ACTIVITIES) {
     const found = countAudio(join(activityRoot, activity.name, "assets", "audio"));
     console.log(
-      `  ${activity.name}: ${found.clips}/${activity.words.length} clips, ${(found.bytes / 1024).toFixed(0)} KB`
+      `  ${activity.name}: ${found.clips}/${activity.items.length * 2} clips, ` +
+        `${(found.bytes / 1024).toFixed(0)} KB`
     );
   }
   process.exit(0);
@@ -167,10 +175,10 @@ async function synthesize(text, retries = 3) {
 }
 
 for (const job of jobs) {
-  const { activity, word, target, dir } = job;
+  const { activity, clip, target, dir } = job;
   try {
     mkdirSync(dir, { recursive: true });
-    const raw = await synthesize(word);
+    const raw = await synthesize(clip.text);
 
     execFileSync(
       FFMPEG,
@@ -190,9 +198,9 @@ for (const job of jobs) {
     );
 
     done += 1;
-    console.log(`  ${done}/${jobs.length} ${activity.name}/${slug(word)}.mp3`);
+    console.log(`  ${done}/${jobs.length} ${activity.name}/${clip.file} (${clip.kind})`);
   } catch (error) {
-    failed.push(`${activity.name}/${slug(word)}.mp3: ${error.message}`);
+    failed.push(`${activity.name}/${clip.file}: ${error.message}`);
   }
 }
 
@@ -203,7 +211,8 @@ for (const failure of failed) console.error(`  - ${failure}`);
 for (const activity of ACTIVITIES) {
   const found = countAudio(join(activityRoot, activity.name, "assets", "audio"));
   console.log(
-    `  ${activity.name}: ${found.clips}/${activity.words.length} clips, ${(found.bytes / 1024 / 1024).toFixed(2)} MB`
+    `  ${activity.name}: ${found.clips}/${activity.items.length * 2} clips, ` +
+      `${(found.bytes / 1024 / 1024).toFixed(2)} MB`
   );
 }
 if (done) console.log(`  (${((Date.now() - started) / 1000).toFixed(0)}s)`);
