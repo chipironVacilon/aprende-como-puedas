@@ -170,6 +170,8 @@ const home = await evaluate(`(() => ({
   stars: document.getElementById('stat-stars').textContent,
   practiced: document.querySelector('.progress-card p').textContent,
   hasBanner: !!document.querySelector('.banner'),
+  backHref: document.querySelector('.home-link')?.getAttribute('href') ?? null,
+  brandLabel: document.querySelector('.brand').getAttribute('aria-label'),
   verbCount: IVG.verbs.length,
   level: IVG.profile.level,
   levels: [...document.querySelectorAll('[data-action=set-level]')].map((node) => ({
@@ -198,6 +200,20 @@ check(
 );
 check(home.practiced.includes(`de ${home.verbCount} verbos`), "la barra de progreso usa el total", home.practiced);
 check(home.stars === "0", "empieza con 0 estrellas", home.stars);
+check(
+  home.backHref === "../../../../index.html",
+  "la cabecera enlaza con el menú del proyecto",
+  String(home.backHref)
+);
+check(
+  existsSync(join(root, "../../../../index.html")),
+  "el enlace al menú del proyecto apunta a un archivo real"
+);
+check(
+  home.brandLabel === "Volver al menú de la actividad",
+  "la cabecera distingue el menú de la actividad del menú del proyecto",
+  String(home.brandLabel)
+);
 await shot("01-home");
 
 /* --------------------------------------------------------------- nivel 1 ---- */
@@ -2344,6 +2360,25 @@ check(
   persisted.stars === 0 && persisted.rounds === 0 && persisted.level === 2,
   "el progreso borrado sigue borrado tras recargar",
   JSON.stringify(persisted)
+);
+
+/* --------------------------------------------------- volver al proyecto ---- */
+
+// El camino de vuelta al menú del proyecto tiene que funcionar de verdad: un
+// clic en la cabecera deja la actividad y abre el portal.
+await evaluate("document.querySelector('.home-link').click()");
+for (let attempt = 0; attempt < 80 && !/Aprende como puedas/.test(await evaluate("document.title")); attempt += 1) {
+  await sleep(100);
+}
+check(
+  /Aprende como puedas/.test(await evaluate("document.title")),
+  "el enlace de la cabecera abre el menú del proyecto",
+  await evaluate("document.title")
+);
+check(
+  await evaluate("location.pathname.endsWith('/index.html') && !location.pathname.includes('/primaria/')"),
+  "la cabecera regresa al menú principal, no a una página que no existe",
+  await evaluate("location.pathname")
 );
 
 /* ----------------------------------------------------------------- done ---- */

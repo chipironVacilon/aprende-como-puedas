@@ -182,5 +182,6 @@ no hay ninguna API del juego en juego más que la que usa `arcade.js`.
   se trabajan en 5º de Primaria.
 - El juego no recoge datos ni envía nada a internet. Las estrellas, el progreso y
   el récord del arcade se guardan solo en el navegador donde se juega; el botón de
-  la barra superior vuelve al inicio y `IVG.reset()` (desde la consola) borra el
+  la barra superior vuelve al menú de la actividad, el enlace `Inicio` de esa misma
+  barra vuelve al menú del proyecto y `IVG.reset()` (desde la consola) borra el
   progreso.

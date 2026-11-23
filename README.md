@@ -25,6 +25,11 @@ atado con un nudo), una franja de contexto (`Primaria › 5º`) y una sección p
 asignatura que se pliega y se despliega. Cada actividad es una tarjeta con su
 enlace a una página independiente.
 
+El camino de vuelta siempre existe: la cabecera de cada actividad enlaza con este
+menú principal. Desde una actividad se vuelve a su propio menú de juegos con la
+barra superior (el nombre de la actividad) y al menú del proyecto con el enlace
+`Inicio` de esa misma barra.
+
 ## Cómo está organizado
 
 ```
@@ -79,6 +84,14 @@ el menú sólo guarda un enlace a su `index.html`.
    ```
 
 3. Abre el `index.html` de la raíz y comprueba que el enlace lleva a la actividad.
+4. Comprueba el camino de vuelta. La cabecera de la actividad tiene que enlazar con
+   el menú principal con una ruta relativa **que exista**: cuenta los niveles de
+   carpeta, porque desde `primaria/5/frances/colores/index.html` el portal está a
+   cuatro saltos (`../../../../index.html`), no a tres. Una ruta de más abre una
+   página en blanco: el enlace parece correcto y no lleva a ninguna parte.
+
+   Las comprobaciones de `verificar.mjs` (francés) y `play-test.mjs` (inglés) fallan
+   si ese enlace no apunta a un fichero real, así que no hace falta acordarse.
 
 No hay que compilar nada: los ficheros se editan y se abren tal cual.
 
@@ -137,7 +150,7 @@ que nada desborde a 390 px y falla si algo lanza un error:
 
 ```bash
 cd primaria/5/frances
-node verificar.mjs                    # 117 comprobaciones
+node verificar.mjs                    # 120 comprobaciones
 node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
 ```
 

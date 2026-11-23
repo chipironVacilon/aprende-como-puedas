@@ -66,6 +66,7 @@
 
   .topbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -88,6 +89,32 @@
 
   .brand:hover { background: var(--card-strong); transform: translateY(-1px); }
   .brand__logo { font-size: 1.1rem; }
+
+  .topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Camino de vuelta al menú del proyecto: siempre visible, con texto. */
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: inherit;
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .home-link:hover { background: var(--card-strong); transform: translateY(-1px); }
+  .home-link__icon { font-size: 1.1rem; }
 
   .stats { display: flex; gap: 8px; }
 
@@ -1032,6 +1059,7 @@
     .brand { padding: 8px 12px; }
     .brand__text { display: none; }
     .brand__logo { font-size: 1.25rem; }
+    .home-link { padding: 8px 10px; font-size: 0.9rem; }
     .stat { padding: 7px 10px; font-size: 0.9rem; }
   }
 
@@ -1047,13 +1075,19 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <button class="brand" data-action="home" aria-label="Volver al inicio">
+    <button class="brand" data-action="home" aria-label="Volver al menú de la actividad">
       <span class="brand__logo" aria-hidden="true">🔤</span>
       <span class="brand__text">Verbos Irregulares</span>
     </button>
-    <div class="stats">
-      <span class="stat" title="Estrellas conseguidas">⭐ <b id="stat-stars">0</b></span>
-      <span class="stat" title="Mejor racha de aciertos">🔥 <b id="stat-streak">0</b></span>
+    <div class="topbar__actions">
+      <a class="home-link" href="../../../../index.html" aria-label="Volver al menú del proyecto: Aprende como puedas">
+        <span class="home-link__icon" aria-hidden="true">⌂</span>
+        <span>Inicio</span>
+      </a>
+      <div class="stats">
+        <span class="stat" title="Estrellas conseguidas">⭐ <b id="stat-stars">0</b></span>
+        <span class="stat" title="Mejor racha de aciertos">🔥 <b id="stat-streak">0</b></span>
+      </div>
     </div>
   </header>
 
@@ -2111,7 +2145,7 @@ function renderStudy() {
 
   view.innerHTML = `
     <div class="screen-head">
-      <button class="btn btn--ghost" data-action="home" aria-label="Volver al inicio">← Inicio</button>
+      <button class="btn btn--ghost" data-action="home" aria-label="Volver al menú de la actividad">← Menú</button>
       <h1>Tarjetas</h1>
     </div>
 
@@ -2364,7 +2398,7 @@ function renderResult() {
       <div class="result__actions">
         <button class="btn btn--primary" data-action="play" data-mode="${round.mode}">Jugar otra ronda ⭐</button>
         <button class="btn" data-action="study">Ver las tarjetas 🃏</button>
-        <button class="btn btn--ghost btn--wide" data-action="home">Volver al inicio</button>
+        <button class="btn btn--ghost btn--wide" data-action="home">Volver al menú</button>
       </div>
     </div>`;
 }
@@ -2612,7 +2646,7 @@ function renderArcade() {
       <p class="arcade__hint">Muévete con las flechas del teclado, desliza el dedo por el laberinto o toca los botones.</p>
       <div class="arcade__actions">
         <button class="btn btn--ghost" data-action="arcade-fullscreen" aria-pressed="${session.fullscreen ? "true" : "false"}">⤢ Pantalla completa</button>
-        <button class="btn btn--ghost" data-action="home">Salir al inicio</button>
+        <button class="btn btn--ghost" data-action="home">Salir al menú</button>
       </div>
     </div>`;
   paintArcadeHud(session);
@@ -2639,7 +2673,7 @@ function renderArcadeOver() {
         <p>Has recogido <b>${session.score}</b> ${session.score === 1 ? "palabra" : "palabras"}.</p>
         <p>Tu récord en el arcade: <b>${profile.arcadeBest}</b></p>
         <button class="btn btn--primary" data-action="play" data-mode="arcade">Jugar otra vez 👾</button>
-        <button class="btn btn--ghost" data-action="home">Volver al inicio</button>
+        <button class="btn btn--ghost" data-action="home">Volver al menú</button>
       </div>
     </div>`;
 }
@@ -2913,7 +2947,7 @@ function renderInvaders() {
       <p class="arcade__hint">Muévete con las flechas ← →, dispara con la barra espaciadora y derriba al marciano que lleva la forma correcta.</p>
       <div class="arcade__actions">
         <button class="btn btn--ghost" data-action="invaders-fullscreen" aria-pressed="${session.fullscreen ? "true" : "false"}">⤢ Pantalla completa</button>
-        <button class="btn btn--ghost" data-action="home">Salir al inicio</button>
+        <button class="btn btn--ghost" data-action="home">Salir al menú</button>
       </div>
     </div>`;
   paintInvadersHud(session);
@@ -2940,7 +2974,7 @@ function renderInvadersOver() {
         <p>Has derribado <b>${session.score}</b> ${session.score === 1 ? "palabra" : "palabras"}.</p>
         <p>Tu récord en invasores: <b>${profile.invadersBest}</b></p>
         <button class="btn btn--primary" data-action="play" data-mode="invaders">Jugar otra vez 🛸</button>
-        <button class="btn btn--ghost" data-action="home">Volver al inicio</button>
+        <button class="btn btn--ghost" data-action="home">Volver al menú</button>
       </div>
     </div>`;
 }

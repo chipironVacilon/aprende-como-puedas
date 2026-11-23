@@ -171,3 +171,25 @@ muestras y las de números son cifras, que acertar se celebra, que la correcció
 frase entera y que "Otra ronda" sigue en el modo Frases.
 
 L19 (rebanadas): `bfdc8fb` páginas + comprobación; el README y este documento en `52b7b76`.
+
+L20 (petición del usuario, literal): «Vamos a revisar la navegabilidad de toda la web. Revisa
+que todas las páginas tengan la opción de "volver" y que haya enlaces para ir a la página
+principal del proyecto desde las dferentes sub-páginas de asinaturas»
+
+L21 (defecto encontrado en lo ya entregado): el enlace de vuelta de las dos actividades de
+francés estaba roto desde S3: `../../../index.html` resuelve, desde
+`primaria/5/frances/colores/`, a `primaria/index.html`, que no existe. Los 117 checks no lo
+vieron porque comparaban el texto del `href` (`home.brand === "../../../index.html"`), nunca
+que el destino exista; el mismo error de profundidad se había copiado a las dos páginas. La
+actividad de inglés tenía el defecto simétrico: su cabecera es un botón al menú interno, así
+que desde ella no había ningún camino al portal.
+Corregido: `../../../../index.html` en las tres páginas; en inglés, enlace `⌂ Inicio` en la
+barra superior (con `.topbar__actions` y `flex-wrap` para 390 px), y las etiquetas internas
+pasan de «Volver al inicio»/«Salir al inicio» a «Volver al menú»/«Salir al menú», porque
+«inicio» ahora nombra el portal.
+Lección que queda en las pruebas: `verificar.mjs` comprueba existencia del destino resuelto
+y un viaje de ida y vuelta con clic real (portal → Colores → cabecera → portal);
+`play-test.mjs` comprueba `href`, existencia y el mismo viaje de vuelta. 120 y 853
+comprobaciones, verdes. Auditoría aparte: las 15 referencias relativas de las cuatro páginas
+existen. No existen páginas de asignatura intermedias (Primaria, 5º, Inglés y Francés son
+`<details>` del portal), así que «sub-página de asignatura» es cada página de actividad.

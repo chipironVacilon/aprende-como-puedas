@@ -352,7 +352,12 @@ async function colors(api) {
     "colores: ofrece tarjetas, quiz, parejas, escucha y frases",
     home.modes.join(",")
   );
-  check(home.brand === "../../../index.html", "colores: vuelve al menú del portal", home.brand);
+  check(home.brand === "../../../../index.html", "colores: vuelve al menú del portal", home.brand);
+  check(
+    existsSync(resolve(join(here, "colores"), home.brand)),
+    "colores: el enlace de vuelta apunta a un fichero que existe",
+    resolve(join(here, "colores"), home.brand)
+  );
   check(!home.banner, "colores: con voz en francés no hay aviso de sonido");
   await api.shot("colores-01-menu");
 
@@ -653,7 +658,12 @@ async function numbers(api) {
     "números: ofrece tarjetas, quiz, escribir, escucha y frases",
     home.modes.join(",")
   );
-  check(home.brand === "../../../index.html", "números: vuelve al menú del portal", home.brand);
+  check(home.brand === "../../../../index.html", "números: vuelve al menú del portal", home.brand);
+  check(
+    existsSync(resolve(join(here, "numeros"), home.brand)),
+    "números: el enlace de vuelta apunta a un fichero que existe",
+    resolve(join(here, "numeros"), home.brand)
+  );
   await api.shot("numeros-01-menu");
 
   await api.click('[data-action="study"]');
@@ -927,6 +937,15 @@ async function portal(api) {
   check(
     await api.evaluate("location.pathname.endsWith('/primaria/5/frances/colores/index.html')"),
     "portal: el enlace de Colores navega de verdad",
+    await api.evaluate("location.pathname")
+  );
+
+  // El camino de vuelta: la cabecera de una actividad regresa al menú principal.
+  await api.click(".brand");
+  await api.waitFor("document.title.includes('Aprende como puedas')", "la cabecera vuelve al portal");
+  check(
+    (await api.evaluate("location.pathname.endsWith('/index.html') && !location.pathname.includes('/primaria/')")),
+    "portal: la cabecera de una actividad regresa al menú principal",
     await api.evaluate("location.pathname")
   );
 }
