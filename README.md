@@ -16,7 +16,8 @@ Primaria
     │                              escucha y adivina, escribe la palabra, arcade
     │                              del marcianito e invasores
     └── Francés
-        └── Colores              → Vacío de momento
+        ├── Colores              → Tarjetas, quiz, parejas, escucha y frases
+        └── Números del 1 al 30  → Tarjetas, quiz, escritura, escucha y frases
 ```
 
 La página principal (`index.html`) es el menú: cabecera con el logotipo (un lápiz
@@ -31,6 +32,12 @@ index.html                                  el menú (portal)
 assets/logo.svg                             logotipo; también es el favicon
 assets/icon-180.png                         icono para móvil y tableta
 primaria/5/ingles/verbos-irregulares/       la actividad de inglés, completa
+primaria/5/frances/colores/                 los colores en francés
+primaria/5/frances/numeros/                 los números del 1 al 30 en francés
+primaria/5/frances/colores/                 la actividad de colores: página, datos y audio
+primaria/5/frances/numeros/                 la actividad de números: página, datos y audio
+primaria/5/frances/scripts/generate-audio.mjs  regenera todas las grabaciones
+primaria/5/frances/verificar.mjs            comprobación de las dos actividades
 ```
 
 Cada actividad vive en su propia carpeta, con todo lo que necesita dentro
@@ -74,6 +81,65 @@ el menú sólo guarda un enlace a su `index.html`.
 3. Abre el `index.html` de la raíz y comprueba que el enlace lleva a la actividad.
 
 No hay que compilar nada: los ficheros se editan y se abren tal cual.
+
+## Las actividades de francés
+
+Las dos son una página autocontenida (`index.html` con su CSS y su JavaScript dentro) y
+tienen la misma estructura: una cabecera con el enlace de vuelta al menú, el progreso
+(estrellas y mejor racha) y cuatro modos.
+
+Cada palabra lleva además **una frase corta que la usa en contexto**, con su traducción y
+su propia grabación: *Le camion est rouge* / *El camión es rojo*, *J'ai douze ans* / *Tengo
+doce años*. Las frases se ven en las tarjetas (colores) o en la lista de frases (números), se
+repiten en la corrección del quiz y de la escritura con su botón para volver a oírlas, y
+tienen su propio modo: **Frases**, que suena una frase y pide elegir el color o el número
+que nombra.
+
+- **Colores** (`primaria/5/frances/colores/`): los once colores básicos con su color real,
+  su traducción y su frase. Tarjetas para mirar y escuchar, quiz de diez preguntas, parejas
+  para emparejar cada nombre con su color, escucha para reconocer el color de oído y frases
+  para entender el color dentro de una frase.
+- **Números del 1 al 30** (`primaria/5/frances/numeros/`): los treinta números con su
+  escritura (`dix-sept`, `vingt et un`, `vingt-deux`…), tarjetas, quiz de ida y vuelta
+  (del número a la palabra y de la palabra al número), escritura con teclado, escucha y
+  frases. La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
+
+Los colores y las frases viven en el `datos.js` de cada actividad: es el fichero que carga
+la página y el que lee el generador de audio, así que el texto que se ve y lo que se oye no
+pueden separarse.
+
+El sonido son grabaciones MP3 incluidas en cada actividad, como en la actividad de
+inglés: se oyen sin conexión y suenan igual en cualquier equipo, sin depender de las voces
+del sistema. Son 82 clips (palabra y frase de cada color y cada número), con voz
+`fr-FR-DeniseNeural` de Edge, algo más lenta de lo normal, convertida a mono 32 kbps con
+normalización de volumen y recorte de silencios. Si alguien copia la página sin la carpeta
+`assets`, el modo "Escucha" queda apagado y se avisa; las demás actividades siguen
+funcionando.
+
+Para regenerar las grabaciones (necesita internet y `npm install`, una sola vez):
+
+```bash
+cd primaria/5/frances
+npm install
+node scripts/generate-audio.mjs            # genera las que falten
+node scripts/generate-audio.mjs --list     # dice qué hay y qué falta
+node scripts/generate-audio.mjs --force dix-sept   # regenera una palabra
+```
+
+El progreso se guarda en el propio navegador (`localStorage`); si está bloqueado, se
+juega igual y no se guarda nada.
+
+Las dos actividades tienen una comprobación de navegador, sin dependencias (sólo necesita
+un Chromium instalado). Abre las tres páginas, juega a los modos, revisa las palabras y los
+enlaces, comprueba que cada palabra y cada frase piden su grabación y que el MP3 se carga
+entero, mira
+que nada desborde a 390 px y falla si algo lanza un error:
+
+```bash
+cd primaria/5/frances
+node verificar.mjs                    # 117 comprobaciones
+node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
+```
 
 ## La actividad de verbos irregulares
 
