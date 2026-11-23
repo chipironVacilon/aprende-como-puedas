@@ -53,6 +53,14 @@ el menú sólo guarda un enlace a su `index.html`.
 
 1. Crea la carpeta siguiendo el camino del menú, por ejemplo
    `primaria/5/frances/colores/`, y pon dentro su `index.html` con la actividad.
+   Enlaza la hoja de tema compartida en el `<head>` (ajusta los `../` a la
+   profundidad de la carpeta) y no repitas colores del tema en la página:
+
+   ```html
+   <meta name="color-scheme" content="light">
+   <link rel="stylesheet" href="../../../../assets/theme.css">
+   ```
+
 2. En el `index.html` de la raíz, dentro de la sección de la asignatura
    correspondiente, cambia la tarjeta "Pronto" por un enlace:
 
