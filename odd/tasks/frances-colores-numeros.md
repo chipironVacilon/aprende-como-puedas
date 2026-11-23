@@ -54,7 +54,7 @@ S7. Cada palabra lleva una **frase corta que la usa en contexto**, con su traduc
 | T5 | Verificación en Chromium real: contenido, modos, móvil, sin errores | S1-S6 | inline | 48fab0b |
 | T6 | Grabar las 41 palabras en MP3, generador y páginas que reproducen los ficheros | S4, S6 | inline | 5364cb1 |
 | T7 | Datos compartidos (`datos.js`), frases de ejemplo grabadas y mostradas | S7 | inline | 7cdf635 |
-| T8 | Modo "Frases": escuchar la frase y elegir el color o el número que nombra | S8 | inline | — |
+| T8 | Modo "Frases": escuchar la frase y elegir el color o el número que nombra | S8 | inline | bfdc8fb |
 
 ## Log
 
@@ -170,5 +170,4 @@ empezar, que hay cuatro opciones con la buena entre ellas, que las opciones de c
 muestras y las de números son cifras, que acertar se celebra, que la corrección enseña la
 frase entera y que "Otra ronda" sigue en el modo Frases.
 
-L19 (rebanadas): páginas + comprobación en el commit `feat(frances): make the example
-sentences a listening exercise`, y el README y este documento en el commit siguiente.
+L19 (rebanadas): `bfdc8fb` páginas + comprobación; el README y este documento en `52b7b76`.
