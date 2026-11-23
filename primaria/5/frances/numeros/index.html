@@ -176,6 +176,8 @@
 
   @media (min-width: 560px) {
     .modes { grid-template-columns: 1fr 1fr; }
+    /* Un número impar de modos deja el último a todo el ancho. */
+    .modes > .mode:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
 
   .mode {
@@ -725,8 +727,9 @@
       <section class="hero">
         <p class="eyebrow">Francés · 5º de Primaria</p>
         <h1>Del 1 al <em>30</em></h1>
-        <p class="lead">Los treinta números en francés, con su escritura y su pronunciación.
-          Elige cómo quieres practicar: mirar, elegir, escribir o escuchar.</p>
+        <p class="lead">Los treinta números en francés, con su escritura, su pronunciación y
+          una frase de ejemplo. Elige cómo quieres practicar: mirar, elegir, escribir,
+          escuchar o entender frases.</p>
       </section>
       ${canListen ? "" : `
       <div class="banner" role="status">
@@ -739,6 +742,7 @@
         ${modeCard("quiz", "⚡", "Quiz", "Diez preguntas para elegir el número o su nombre")}
         ${modeCard("write", "⌨️", "Escribir", "Teclea en francés el número que te pidan")}
         ${modeCard("listen", "🎧", "Escucha", canListen ? "Oye el número en francés y encuéntralo" : "Faltan las grabaciones de esta actividad", !canListen)}
+        ${modeCard("phrase", "🗣️", "Frases", canListen ? "Escucha una frase y encuentra el número que nombra" : "Faltan las grabaciones de esta actividad", !canListen)}
       </div>`;
   }
 
@@ -798,16 +802,33 @@
 
   /* ---------- quiz y escucha ---------- */
 
-  function newRound(listen) {
+  const MODE_TITLES = { quiz: "Quiz", listen: "Escucha", phrase: "Frases" };
+
+  function newRound(mode) {
     const previous = state.quiz ? state.quiz.round.target : null;
     const target = pick(previous ? NUMBERS.filter((item) => item.n !== previous.n) : NUMBERS);
-    const type = listen ? "listen-number" : pick(["number-fr", "fr-number"]);
+    const types = {
+      quiz: ["number-fr", "fr-number"],
+      listen: ["listen-number"],
+      phrase: ["phrase-number"]
+    };
     const others = shuffle(NUMBERS.filter((item) => item.n !== target.n)).slice(0, 3);
-    return { target, type, options: shuffle([target, ...others]) };
+    return { target, type: pick(types[mode]), options: shuffle([target, ...others]) };
   }
 
-  function startQuiz(listen) {
-    state.screen = listen ? "listen" : "quiz";
+  function hasAudioPrompt(quiz) {
+    return quiz.mode === "listen" || quiz.mode === "phrase";
+  }
+
+  // En Escucha y en Frases la grabación suena al empezar la ronda.
+  function playPrompt(quiz) {
+    if (!quiz || quiz.answered) return;
+    if (quiz.mode === "listen") Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "phrase") Sonido.play(quiz.round.target.fr, "phrase");
+  }
+
+  function startQuiz(mode) {
+    state.screen = mode;
     state.write = null;
     state.quiz = {
       index: 0,
@@ -816,16 +837,20 @@
       streak: 0,
       answered: false,
       chosen: null,
-      listen,
-      round: newRound(listen)
+      mode,
+      round: newRound(mode)
     };
-    renderScreen(quizHtml(), state.quiz.listen ? "[data-action='speak']" : ".option");
-    if (listen) Sonido.play(state.quiz.round.target.fr);
+    renderScreen(quizHtml(), hasAudioPrompt(state.quiz) ? "[data-action='speak']" : ".option");
+    playPrompt(state.quiz);
   }
 
-  function promptHtml(round, listen) {
+  function promptHtml(round, mode) {
     const target = round.target;
-    if (listen) {
+    if (mode === "phrase") {
+      return `<button class="speak" data-action="speak" data-say="${target.fr}" data-kind="phrase">
+        🔊 Escuchar la frase</button>`;
+    }
+    if (mode === "listen") {
       return `<button class="speak" data-action="speak" data-say="${target.fr}">
         🔊 Escuchar otra vez</button>`;
     }
@@ -835,14 +860,16 @@
     return `<p class="prompt__word">${target.fr}</p>`;
   }
 
-  function questionText(round, listen) {
-    if (listen) return "Escucha el número y elige cuál es.";
+  function questionText(round, mode) {
+    if (mode === "phrase") return "Escucha la frase y elige el número que nombra.";
+    if (mode === "listen") return "Escucha el número y elige cuál es.";
     if (round.type === "number-fr") return "¿Cómo se escribe en francés?";
     return "¿Qué número es?";
   }
 
   function optionHtml(option, round, quiz) {
-    const numberOption = round.type === "fr-number" || round.type === "listen-number";
+    const numberOption =
+      round.type === "fr-number" || round.type === "listen-number" || round.type === "phrase-number";
     const isRight = quiz.answered && option.n === round.target.n;
     const isChosen = quiz.answered && quiz.chosen === option.fr;
     const classes = ["option"];
@@ -881,7 +908,7 @@
     return `
       <div class="screen-head">
         <button class="back" data-action="home">← Menú</button>
-        <h1 tabindex="-1">${quiz.listen ? "Escucha" : "Quiz"}</h1>
+        <h1 tabindex="-1">${MODE_TITLES[quiz.mode]}</h1>
       </div>
       <div class="progress">
         <span>Pregunta <b>${quiz.index + 1}</b> de ${quiz.total}</span>
@@ -891,8 +918,8 @@
         <span>🔥 ${quiz.streak}</span>
       </div>
       <div class="card prompt">
-        ${promptHtml(round, quiz.listen)}
-        <p class="prompt__question">${questionText(round, quiz.listen)}</p>
+        ${promptHtml(round, quiz.mode)}
+        <p class="prompt__question">${questionText(round, quiz.mode)}</p>
       </div>
       <div class="options">
         ${round.options.map((option) => optionHtml(option, round, quiz)).join("")}
@@ -915,7 +942,8 @@
     } else {
       quiz.streak = 0;
     }
-    if (quiz.listen) Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "listen") Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "phrase") Sonido.play(quiz.round.target.fr, "phrase");
     renderScreen(quizHtml(), "[data-action='next']");
   }
 
@@ -929,9 +957,9 @@
     quiz.index += 1;
     quiz.answered = false;
     quiz.chosen = null;
-    quiz.round = newRound(quiz.listen);
-    renderScreen(quizHtml(), quiz.listen ? "[data-action='speak']" : ".option");
-    if (quiz.listen) Sonido.play(quiz.round.target.fr);
+    quiz.round = newRound(quiz.mode);
+    renderScreen(quizHtml(), hasAudioPrompt(quiz) ? "[data-action='speak']" : ".option");
+    playPrompt(quiz);
   }
 
   function summaryHtml() {
@@ -957,7 +985,7 @@
           : `Has ganado ${quiz.correct} estrellas en esta ronda.`}</p>
       </div>
       <div class="actions">
-        <button class="primary" data-action="again" data-mode="${quiz.listen ? "listen" : "quiz"}">
+        <button class="primary" data-action="again" data-mode="${quiz.mode}">
           Otra ronda →
         </button>
         <button class="back" data-action="home">Volver al menú</button>
@@ -1113,14 +1141,15 @@
       renderScreen(studyHtml(), "h1");
       return;
     }
-    if (action === "quiz") return startQuiz(false);
-    if (action === "listen") return startQuiz(true);
+    if (action === "quiz") return startQuiz("quiz");
+    if (action === "listen") return startQuiz("listen");
+    if (action === "phrase") return startQuiz("phrase");
     if (action === "write") return startWrite();
     if (action === "answer") return answer(trigger.dataset.value);
     if (action === "next") return state.write ? nextWrite() : nextRound();
     if (action === "again") {
       const mode = trigger.dataset.mode;
-      return mode === "write" ? startWrite() : startQuiz(mode === "listen");
+      return mode === "write" ? startWrite() : startQuiz(mode || "quiz");
     }
     if (action === "speak") {
       Sonido.play(trigger.dataset.say, trigger.dataset.kind);

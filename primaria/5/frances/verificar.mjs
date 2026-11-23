@@ -301,6 +301,7 @@ const READ_COLOR_ROUND = `(() => {
     swatchLabel: swatch ? swatch.getAttribute("aria-label") : null,
     word: word ? word.textContent.trim() : null,
     say: say ? say.dataset.say : null,
+    kind: say ? say.dataset.kind || "word" : null,
     question: prompt.querySelector(".prompt__question").textContent.trim(),
     options: [...document.querySelectorAll(".option")].map((node) => node.dataset.value)
   };
@@ -335,7 +336,7 @@ const READ_FEEDBACK = `(() => {
 })()`;
 
 async function colors(api) {
-  await api.goto(PAGES.colores, "document.querySelectorAll('.mode').length === 4");
+  await api.goto(PAGES.colores, "document.querySelectorAll('.mode').length === 5");
 
   const home = await api.evaluate(`(() => ({
     title: document.title,
@@ -347,8 +348,8 @@ async function colors(api) {
   check(/colores en francés/i.test(home.title), "colores: el título nombra los colores", home.title);
   check(home.heading === "Los colores", "colores: el título grande es «Los colores»", home.heading);
   check(
-    home.modes.join(",") === "study,quiz,memory,listen",
-    "colores: ofrece tarjetas, quiz, parejas y escucha",
+    home.modes.join(",") === "study,quiz,memory,listen,phrase",
+    "colores: ofrece tarjetas, quiz, parejas, escucha y frases",
     home.modes.join(",")
   );
   check(home.brand === "../../../index.html", "colores: vuelve al menú del portal", home.brand);
@@ -568,6 +569,52 @@ async function colors(api) {
   await api.click('[data-action="home"]');
 }
 
+async function colorsPhrases(api) {
+  await api.click('[data-action="phrase"]');
+  await api.waitFor(
+    "document.querySelector('.prompt__question')?.textContent.includes('la frase')",
+    "el modo frases de colores arranca"
+  );
+
+  const round = await api.evaluate(READ_COLOR_ROUND);
+  check(round.say && round.kind === "phrase", "frases: la ronda trae la frase grabada", JSON.stringify(round));
+  check(
+    round.question === "Escucha la frase y elige el color que nombra.",
+    "frases: la consigna pide el color de la frase",
+    round.question
+  );
+  check(
+    round.options.length === 4 && round.options.includes(round.say),
+    "frases: cuatro colores y el correcto entre ellos",
+    JSON.stringify(round.options)
+  );
+
+  const swatches = await api.evaluate("document.querySelectorAll('.option .option__swatch').length");
+  check(swatches === 4, "frases: las opciones son colores, no palabras", `${swatches}`);
+
+  const heard = await playedClip(api, "colores", round.say, "-phrase");
+  check(
+    Boolean(heard) && heard.src.endsWith(`/colores/assets/audio/${slug(round.say)}-phrase.mp3`),
+    "frases: suena la frase al empezar",
+    JSON.stringify(heard)
+  );
+  await api.shot("colores-07-frases");
+
+  await api.click(`.option[data-value="${round.say}"]`);
+  const answered = await api.evaluate(READ_FEEDBACK);
+  check(/¡Bien!/.test(answered.message || ""), "frases: acertar se celebra", answered.message);
+  check(
+    (await api.text(".feedback__phrase") || "").includes(PHRASE_BY_WORD[round.say].fr),
+    "frases: la corrección enseña la frase entera",
+    await api.text(".feedback__phrase")
+  );
+
+  await api.click('[data-action="next"]');
+  const second = await api.evaluate(READ_COLOR_ROUND);
+  check(second.kind === "phrase", "frases: la ronda siguiente sigue siendo de frases", JSON.stringify(second));
+  await api.click('[data-action="home"]');
+}
+
 /* --------------------------------------------------------------- numbers ---- */
 
 const READ_NUMBER_ROUND = `(() => {
@@ -579,6 +626,7 @@ const READ_NUMBER_ROUND = `(() => {
     number: number ? Number(number.textContent.trim()) : null,
     word: word ? word.textContent.trim() : null,
     say: say ? say.dataset.say : null,
+    kind: say ? say.dataset.kind || "word" : null,
     question: prompt.querySelector(".prompt__question").textContent.trim(),
     options: [...document.querySelectorAll(".option")].map((node) => node.dataset.value)
   };
@@ -590,7 +638,7 @@ function numberTarget(round) {
 }
 
 async function numbers(api) {
-  await api.goto(PAGES.numeros, "document.querySelectorAll('.mode').length === 4");
+  await api.goto(PAGES.numeros, "document.querySelectorAll('.mode').length === 5");
 
   const home = await api.evaluate(`(() => ({
     title: document.title,
@@ -601,8 +649,8 @@ async function numbers(api) {
   check(/números del 1 al 30/i.test(home.title), "números: el título nombra el 1 al 30", home.title);
   check(home.heading === "Del 1 al 30", "números: el título grande es «Del 1 al 30»", home.heading);
   check(
-    home.modes.join(",") === "study,quiz,write,listen",
-    "números: ofrece tarjetas, quiz, escribir y escucha",
+    home.modes.join(",") === "study,quiz,write,listen,phrase",
+    "números: ofrece tarjetas, quiz, escribir, escucha y frases",
     home.modes.join(",")
   );
   check(home.brand === "../../../index.html", "números: vuelve al menú del portal", home.brand);
@@ -787,6 +835,54 @@ async function numbers(api) {
   await api.click('[data-action="home"]');
 }
 
+async function numbersPhrases(api) {
+  await api.click('[data-action="phrase"]');
+  await api.waitFor(
+    "document.querySelector('.prompt__question')?.textContent.includes('la frase')",
+    "el modo frases de números arranca"
+  );
+
+  const round = await api.evaluate(READ_NUMBER_ROUND);
+  check(round.say && round.kind === "phrase", "frases: la ronda trae la frase grabada", JSON.stringify(round));
+  check(
+    round.question === "Escucha la frase y elige el número que nombra.",
+    "frases: la consigna pide el número de la frase",
+    round.question
+  );
+  check(
+    round.options.length === 4 && round.options.includes(round.say),
+    "frases: cuatro números y el correcto entre ellos",
+    JSON.stringify(round.options)
+  );
+
+  const numerals = await api.evaluate("document.querySelectorAll('.option .option__number').length");
+  check(numerals === 4, "frases: las opciones son números, no palabras", `${numerals}`);
+
+  const heard = await playedClip(api, "numeros", round.say, "-phrase");
+  check(
+    Boolean(heard) && heard.src.endsWith(`/numeros/assets/audio/${slug(round.say)}-phrase.mp3`),
+    "frases: suena la frase al empezar",
+    JSON.stringify(heard)
+  );
+  await api.shot("numeros-06-frases");
+
+  await api.click(`.option[data-value="${round.say}"]`);
+  const answered = await api.evaluate(READ_FEEDBACK);
+  check(/¡Bien!/.test(answered.message || ""), "frases: acertar se celebra", answered.message);
+  check(
+    (await api.text(".feedback__phrase") || "").includes(PHRASE_BY_WORD[round.say].fr),
+    "frases: la corrección enseña la frase entera",
+    await api.text(".feedback__phrase")
+  );
+
+  await api.click('[data-action="next"]');
+  check(
+    (await api.evaluate("document.querySelectorAll('.option .option__number').length")) === 4,
+    "frases: la ronda siguiente sigue siendo de frases"
+  );
+  await api.click('[data-action="home"]');
+}
+
 /* ---------------------------------------------------------------- portal ---- */
 
 async function portal(api) {
@@ -840,8 +936,8 @@ async function portal(api) {
 async function mobile(api) {
   await api.viewport(390, 844);
   for (const [name, url, ready] of [
-    ["colores", PAGES.colores, "document.querySelectorAll('.mode').length === 4"],
-    ["numeros", PAGES.numeros, "document.querySelectorAll('.mode').length === 4"],
+    ["colores", PAGES.colores, "document.querySelectorAll('.mode').length === 5"],
+    ["numeros", PAGES.numeros, "document.querySelectorAll('.mode').length === 5"],
     ["portal", PAGES.portal, "document.querySelectorAll('.subject').length === 2"]
   ]) {
     await api.goto(url, ready);
@@ -857,7 +953,7 @@ async function mobile(api) {
     await api.shot(`${name}-movil`);
   }
 
-  await api.goto(PAGES.numeros, "document.querySelectorAll('.mode').length === 4");
+  await api.goto(PAGES.numeros, "document.querySelectorAll('.mode').length === 5");
   await api.click('[data-action="study"]');
   await api.waitFor("document.querySelectorAll('.number-card').length === 30", "las 30 tarjetas en móvil");
   const grid = await api.evaluate(`(() => ({
@@ -885,7 +981,7 @@ async function withoutClips() {
     const scratch = await mkdtemp(join(homedir(), "frances-sin-audio-"));
     await copyFile(join(here, "colores/index.html"), join(scratch, "index.html"));
     await copyFile(join(here, "colores/datos.js"), join(scratch, "datos.js"));
-    await api.goto(`file://${join(scratch, "index.html")}`, "document.querySelectorAll('.mode').length === 4");
+    await api.goto(`file://${join(scratch, "index.html")}`, "document.querySelectorAll('.mode').length === 5");
 
     const state = await api.evaluate(`(() => ({
       disabled: document.querySelector(".mode--listen").disabled,
@@ -920,7 +1016,9 @@ async function withoutClips() {
 const api = await boot();
 try {
   await colors(api);
+  await colorsPhrases(api);
   await numbers(api);
+  await numbersPhrases(api);
   await portal(api);
   await mobile(api);
   check(

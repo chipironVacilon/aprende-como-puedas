@@ -176,6 +176,8 @@
 
   @media (min-width: 560px) {
     .modes { grid-template-columns: 1fr 1fr; }
+    /* Un número impar de modos deja el último a todo el ancho. */
+    .modes > .mode:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
 
   .mode {
@@ -362,8 +364,8 @@
   }
 
   .option__swatch {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
     flex: 0 0 auto;
     border-radius: 11px;
     border: 2px solid rgba(255, 255, 255, 0.45);
@@ -728,8 +730,9 @@
       <section class="hero">
         <p class="eyebrow">Francés · 5º de Primaria</p>
         <h1>Los <em>colores</em></h1>
-        <p class="lead">Once colores en francés, con su color de verdad y su traducción al
-          español. Elige cómo quieres practicar: mirar, elegir, emparejar o escuchar.</p>
+        <p class="lead">Once colores en francés, con su color de verdad, su traducción y una
+          frase de ejemplo. Elige cómo quieres practicar: mirar, elegir, emparejar, escuchar
+          o entender frases.</p>
       </section>
       ${canListen ? "" : `
       <div class="banner" role="status">
@@ -742,6 +745,7 @@
         ${modeCard("quiz", "⚡", "Quiz", "Diez preguntas para elegir el color correcto")}
         ${modeCard("memory", "🧩", "Parejas", "Empareja cada nombre con su color")}
         ${modeCard("listen", "🎧", "Escucha", canListen ? "Oye el color en francés y encuéntralo" : "Faltan las grabaciones de esta actividad", !canListen)}
+        ${modeCard("phrase", "🗣️", "Frases", canListen ? "Escucha una frase y encuentra el color que nombra" : "Faltan las grabaciones de esta actividad", !canListen)}
       </div>`;
   }
 
@@ -774,15 +778,32 @@
 
   /* ---------- quiz y escucha ---------- */
 
-  function newRound(listen) {
+  const MODE_TITLES = { quiz: "Quiz", listen: "Escucha", phrase: "Frases" };
+
+  function newRound(mode) {
     const target = pick(COLORS);
-    const type = listen ? "listen-swatch" : pick(["swatch-fr", "fr-swatch", "es-fr"]);
+    const types = {
+      quiz: ["swatch-fr", "fr-swatch", "es-fr"],
+      listen: ["listen-swatch"],
+      phrase: ["phrase-swatch"]
+    };
     const others = shuffle(COLORS.filter((color) => color.fr !== target.fr)).slice(0, 3);
-    return { target, type, options: shuffle([target, ...others]) };
+    return { target, type: pick(types[mode]), options: shuffle([target, ...others]) };
   }
 
-  function startQuiz(listen) {
-    state.screen = listen ? "listen" : "quiz";
+  function hasAudioPrompt(quiz) {
+    return quiz.mode === "listen" || quiz.mode === "phrase";
+  }
+
+  // En Escucha y en Frases la grabación suena al empezar la ronda.
+  function playPrompt(quiz) {
+    if (!quiz || quiz.answered) return;
+    if (quiz.mode === "listen") Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "phrase") Sonido.play(quiz.round.target.fr, "phrase");
+  }
+
+  function startQuiz(mode) {
+    state.screen = mode;
     state.memory = null;
     state.quiz = {
       index: 0,
@@ -791,16 +812,20 @@
       streak: 0,
       answered: false,
       chosen: null,
-      listen,
-      round: newRound(listen)
+      mode,
+      round: newRound(mode)
     };
-    renderQuiz({ focus: state.quiz.listen ? "[data-action='speak']" : ".option" });
-    if (listen) Sonido.play(state.quiz.round.target.fr);
+    renderQuiz({ focus: hasAudioPrompt(state.quiz) ? "[data-action='speak']" : ".option" });
+    playPrompt(state.quiz);
   }
 
-  function promptHtml(round, listen) {
+  function promptHtml(round, mode) {
     const target = round.target;
-    if (listen) {
+    if (mode === "phrase") {
+      return `<button class="speak" data-action="speak" data-say="${target.fr}" data-kind="phrase">
+        🔊 Escuchar la frase</button>`;
+    }
+    if (mode === "listen") {
       return `<button class="speak" data-action="speak" data-say="${target.fr}">
         🔊 Escuchar otra vez</button>`;
     }
@@ -814,15 +839,17 @@
     return `<p class="prompt__word">${target.es}</p>`;
   }
 
-  function questionText(round, listen) {
-    if (listen) return "Escucha el color y elige cuál es.";
+  function questionText(round, mode) {
+    if (mode === "phrase") return "Escucha la frase y elige el color que nombra.";
+    if (mode === "listen") return "Escucha el color y elige cuál es.";
     if (round.type === "swatch-fr") return "¿Cómo se dice este color en francés?";
     if (round.type === "fr-swatch") return "¿De qué color se trata?";
     return "¿Cómo se dice en francés?";
   }
 
   function optionHtml(option, round, quiz) {
-    const swatchOption = round.type === "fr-swatch" || round.type === "listen-swatch";
+    const swatchOption =
+      round.type === "fr-swatch" || round.type === "listen-swatch" || round.type === "phrase-swatch";
     const isRight = quiz.answered && option.fr === round.target.fr;
     const isChosen = quiz.answered && quiz.chosen === option.fr;
     const classes = ["option"];
@@ -862,7 +889,7 @@
     return `
       <div class="screen-head">
         <button class="back" data-action="home">← Menú</button>
-        <h1 tabindex="-1">${quiz.listen ? "Escucha" : "Quiz"}</h1>
+        <h1 tabindex="-1">${MODE_TITLES[quiz.mode]}</h1>
       </div>
       <div class="progress">
         <span>Pregunta <b>${quiz.index + 1}</b> de ${quiz.total}</span>
@@ -872,8 +899,8 @@
         <span>🔥 ${quiz.streak}</span>
       </div>
       <div class="card prompt">
-        ${promptHtml(round, quiz.listen)}
-        <p class="prompt__question">${questionText(round, quiz.listen)}</p>
+        ${promptHtml(round, quiz.mode)}
+        <p class="prompt__question">${questionText(round, quiz.mode)}</p>
       </div>
       <div class="options">
         ${round.options.map((option) => optionHtml(option, round, quiz)).join("")}
@@ -901,7 +928,8 @@
     } else {
       quiz.streak = 0;
     }
-    if (quiz.listen) Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "listen") Sonido.play(quiz.round.target.fr);
+    if (quiz.mode === "phrase") Sonido.play(quiz.round.target.fr, "phrase");
     renderQuiz({ focus: "[data-action='next']" });
   }
 
@@ -909,16 +937,15 @@
     const quiz = state.quiz;
     if (!quiz) return;
     if (quiz.index + 1 >= quiz.total) {
-      state.screen = quiz.listen ? "listen" : "quiz";
       renderScreen(summaryHtml(), "[data-action='again']");
       return;
     }
     quiz.index += 1;
     quiz.answered = false;
     quiz.chosen = null;
-    quiz.round = newRound(quiz.listen);
-    renderQuiz({ focus: quiz.listen ? "[data-action='speak']" : ".option" });
-    if (quiz.listen) Sonido.play(quiz.round.target.fr);
+    quiz.round = newRound(quiz.mode);
+    renderQuiz({ focus: hasAudioPrompt(quiz) ? "[data-action='speak']" : ".option" });
+    playPrompt(quiz);
   }
 
   function summaryHtml() {
@@ -944,7 +971,7 @@
           : `Has ganado ${quiz.correct} estrellas en esta ronda.`}</p>
       </div>
       <div class="actions">
-        <button class="primary" data-action="again" data-mode="${quiz.listen ? "listen" : "quiz"}">
+        <button class="primary" data-action="again" data-mode="${quiz.mode}">
           Otra ronda →
         </button>
         <button class="back" data-action="home">Volver al menú</button>
@@ -1096,12 +1123,13 @@
       renderScreen(studyHtml(), "h1");
       return;
     }
-    if (action === "quiz") return startQuiz(false);
-    if (action === "listen") return startQuiz(true);
+    if (action === "quiz") return startQuiz("quiz");
+    if (action === "listen") return startQuiz("listen");
+    if (action === "phrase") return startQuiz("phrase");
     if (action === "memory") return startMemory();
     if (action === "answer") return answer(trigger.dataset.value);
     if (action === "next") return nextRound();
-    if (action === "again") return startQuiz(trigger.dataset.mode === "listen");
+    if (action === "again") return startQuiz(trigger.dataset.mode || "quiz");
     if (action === "flip") return flip(Number(trigger.dataset.index));
     if (action === "speak") {
       Sonido.play(trigger.dataset.say, trigger.dataset.kind);
