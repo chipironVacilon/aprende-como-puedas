@@ -145,4 +145,5 @@ que la orden de `play()` llegue, y que la corrección del quiz y de la escritura
 frase.
 
 L15 (rebanadas): `7cdf635` datos compartidos + páginas + generador + 41 clips nuevos,
-`2dc1c7a` la comprobación, `e658f86` el README y este documento.
+`2dc1c7a` la comprobación, y el commit `docs(frances): document the example
+sentences` con el README y este documento.
