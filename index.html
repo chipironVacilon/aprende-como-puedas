@@ -5,54 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aprende como puedas · Ejercicios y juegos para Primaria</title>
 <meta name="description" content="Ejercicios y juegos para aprender en Primaria: inglés, francés y más. Se abre en el navegador, sin instalar nada y sin conexión.">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0b1020">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#fff7e8">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  :root {
-    --bg: #0b1020;
-    --card: rgba(255, 255, 255, 0.055);
-    --card-strong: rgba(255, 255, 255, 0.09);
-    --line: rgba(255, 255, 255, 0.12);
-    --ink: #eef2ff;
-    --muted: #9aa8c7;
-    --gold: #ffd166;
-    --violet: #8b7cff;
-    --cyan: #22d3ee;
-    --green: #4ade80;
-    --amber: #ffb347;
-    --radius: 20px;
-    --shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body { margin: 0; min-height: 100%; }
-
-  body {
-    background:
-      radial-gradient(1100px 620px at 12% -12%, #2a1a5e 0%, transparent 62%),
-      radial-gradient(900px 520px at 92% -6%, #0b3b53 0%, transparent 60%),
-      radial-gradient(700px 500px at 50% 110%, #1b1240 0%, transparent 65%),
-      var(--bg);
-    color: var(--ink);
-    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI Variable Display", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 17px;
-    line-height: 1.45;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  :focus-visible {
-    outline: 3px solid var(--gold);
-    outline-offset: 3px;
-    border-radius: 14px;
-  }
-
   .app {
     width: min(100%, 720px);
     margin: 0 auto;
-    padding: 22px 16px calc(34px + env(safe-area-inset-bottom));
+    padding: 26px 18px calc(40px + env(safe-area-inset-bottom));
   }
 
   /* ---------- header ---------- */
@@ -61,7 +23,13 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 20px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    border: var(--borde);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: 6px 6px 0 var(--gold);
+    transform: rotate(-1deg);
   }
 
   .site-header__logo {
@@ -69,41 +37,39 @@
     height: 58px;
     flex: 0 0 auto;
     display: block;
-    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
   }
 
   .site-header__text { display: grid; gap: 2px; min-width: 0; }
 
   .eyebrow {
     margin: 0;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.16em;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--rosa);
   }
 
   .site-header h1 {
     margin: 0;
     font-size: clamp(1.5rem, 5.4vw, 2rem);
     font-weight: 900;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
+    letter-spacing: -0.035em;
+    line-height: 1.06;
   }
 
-  .site-header h1 em {
-    font-style: normal;
-    background: linear-gradient(120deg, #a78bfa, #22d3ee 72%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  .site-header h1 em { font-style: normal; color: var(--morado); }
 
   .lead {
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     max-width: 52ch;
+    padding: 12px 16px;
+    border: 2px dashed var(--line-strong);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.6);
     color: var(--muted);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    font-weight: 600;
   }
 
   /* ---------- context: where you are ---------- */
@@ -112,72 +78,74 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 0 0 18px;
+    margin: 0 0 22px;
     padding: 0;
     font-size: 0.8rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.02em;
   }
 
   .context__chip {
-    padding: 5px 12px;
-    border: 1px solid var(--line);
+    padding: 7px 15px;
+    border: 2px solid var(--outline);
     border-radius: 999px;
-    background: var(--card);
-    color: #c9d2e6;
+    background: var(--card-strong);
+    box-shadow: 3px 3px 0 var(--shadow-soft);
     white-space: nowrap;
   }
 
-  .context__sep { color: rgba(255, 255, 255, 0.3); }
+  .context__chip--now { background: var(--gold); }
+
+  .context__sep { color: var(--line-strong); font-weight: 900; }
 
   /* ---------- subjects ---------- */
 
-  .subjects { display: grid; gap: 4px; }
-
-  .subject { border-top: 1px solid var(--line); }
-  .subject:first-child { border-top: 0; }
+  .subjects { display: grid; gap: 22px; }
 
   .subject__head {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    min-height: 56px;
-    margin: 0 -8px;
-    padding: 10px 8px;
-    border-radius: 14px;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 7px 18px 7px 10px;
+    border: var(--borde);
+    border-radius: 999px;
+    background: var(--tint-subject, var(--tint));
+    font-size: 1.12rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    box-shadow: 4px 4px 0 var(--shadow-soft);
+    transform: rotate(-1.2deg);
     cursor: pointer;
     list-style: none;
-    transition: background 0.15s ease;
   }
 
   .subject__head::-webkit-details-marker { display: none; }
   .subject__head::marker { content: ""; }
-  .subject__head:hover { background: rgba(255, 255, 255, 0.035); }
 
   .subject__icon {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     flex: 0 0 auto;
     border-radius: 11px;
-    background: color-mix(in srgb, var(--accent, var(--green)) 20%, transparent);
+    background: rgba(255, 255, 255, 0.66);
     font-size: 1.05rem;
   }
 
   .subject__title {
     margin: 0;
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.12rem;
+    font-weight: 900;
     letter-spacing: -0.02em;
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .subject__count {
-    margin-left: auto;
     color: var(--muted);
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     white-space: nowrap;
   }
 
@@ -185,124 +153,128 @@
     width: 9px;
     height: 9px;
     flex: 0 0 auto;
-    border-right: 2px solid var(--muted);
-    border-bottom: 2px solid var(--muted);
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
     transform: rotate(-45deg);
+    margin-left: 4px;
     transition: transform 0.18s ease;
   }
 
   .subject[open] > .subject__head .subject__chev { transform: rotate(45deg); }
 
-  .subject__panel { padding: 2px 0 16px; }
+  .subject__panel { padding: 2px 0 4px; }
 
-  .subject--en { --accent: var(--green); }
-  .subject--fr { --accent: var(--amber); }
+  .subject--en { --tint-subject: #b8f2e2; }
+  .subject--fr { --tint-subject: #ffd9a8; }
 
-  .activities { display: grid; gap: 10px; }
+  .activities { display: grid; gap: 14px; }
 
   /* ---------- the one surface: an activity ---------- */
 
   .activity {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
+    gap: 14px;
+    padding: 16px;
+    border: var(--borde);
+    border-radius: var(--radius);
     background: var(--card);
-    box-shadow: var(--shadow);
+    box-shadow: 5px 5px 0 rgba(27, 36, 80, 0.85);
     text-decoration: none;
     color: inherit;
   }
 
-  a.activity { transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
-  a.activity:hover { background: var(--card-strong); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
-  a.activity:active { transform: translateY(0); }
+  a.activity { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+  a.activity:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 rgba(27, 36, 80, 0.85); }
+  a.activity:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 rgba(27, 36, 80, 0.85); }
 
   .activity__icon {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     flex: 0 0 auto;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--accent, var(--green)) 20%, transparent);
-    font-size: 1.15rem;
+    border: 2px solid var(--outline);
+    border-radius: var(--radius-sm);
+    background: var(--tint-subject, var(--tint));
+    font-size: 1.35rem;
   }
 
-  .activity__body { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
-  .activity__title { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
-  .activity__meta { font-size: 0.84rem; color: var(--muted); }
+  .activity__body { display: grid; gap: 3px; flex: 1 1 auto; min-width: 0; }
+  .activity__title { font-size: 1.05rem; font-weight: 900; letter-spacing: -0.01em; }
+  .activity__meta { font-size: 0.83rem; color: var(--muted); font-weight: 600; }
 
   .activity__go {
     display: inline-flex;
     align-items: center;
     gap: 7px;
     flex: 0 0 auto;
-    padding: 9px 16px;
+    padding: 10px 16px;
+    border: 2px solid var(--outline);
     border-radius: 999px;
-    background: linear-gradient(180deg, #a78bfa, #7c5cff);
-    color: #0b1020;
-    font-weight: 800;
-    font-size: 0.92rem;
+    background: var(--morado-ink);
+    box-shadow: 3px 3px 0 var(--outline);
+    color: #fff;
+    font-weight: 900;
+    font-size: 0.9rem;
     white-space: nowrap;
   }
 
   .activity--soon {
     border-style: dashed;
     box-shadow: none;
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--bg-2);
   }
 
   .activity--soon .activity__icon {
-    background: rgba(255, 255, 255, 0.07);
+    border-style: dashed;
+    background: rgba(255, 255, 255, 0.5);
   }
 
-  .activity--soon .activity__title { color: #d5dcef; }
+  .activity--soon .activity__title { color: var(--ink); }
 
   .activity__tag {
     flex: 0 0 auto;
-    padding: 6px 12px;
-    border: 1px solid var(--line);
+    padding: 7px 12px;
+    border: 2px solid var(--outline);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #b9c4dd;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.09em;
+    background: var(--gold);
+    color: var(--ink);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   /* ---------- footer ---------- */
 
   .site-footer {
-    margin-top: 26px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line);
+    margin-top: 28px;
+    padding: 14px 16px;
+    border: 2px dashed var(--line-strong);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.6);
     color: var(--muted);
-    font-size: 0.84rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    transform: rotate(0.8deg);
   }
 
   .site-footer p { margin: 0; }
 
   @media (max-width: 460px) {
-    .activity { flex-wrap: wrap; padding: 12px 12px 14px; }
-    .activity__body { flex-basis: calc(100% - 52px); }
+    .app { padding: 20px 14px calc(34px + env(safe-area-inset-bottom)); }
+    .site-header { padding: 14px; gap: 12px; }
+    .activity { flex-wrap: wrap; padding: 14px; }
+    .activity__body { flex-basis: calc(100% - 60px); }
     .activity__go {
-      margin-left: 52px;
+      margin-left: 60px;
       flex: 1 1 auto;
       justify-content: center;
     }
-    .activity__tag { margin-left: 52px; }
-    .subject__head { gap: 10px; padding: 10px 6px; margin: 0 -6px; }
-    .subject__title { font-size: 1.1rem; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      transition: none !important;
-      animation: none !important;
-    }
+    .activity__tag { margin-left: 60px; }
+    .subject__head { padding: 6px 14px 6px 8px; }
+    .subject__title { font-size: 1.05rem; }
   }
 </style>
 </head>
@@ -323,7 +295,7 @@
     <p class="context" aria-label="Curso actual">
       <span class="context__chip">Primaria</span>
       <span class="context__sep" aria-hidden="true">›</span>
-      <span class="context__chip">5º</span>
+      <span class="context__chip context__chip--now">5º</span>
     </p>
 
     <nav class="subjects" aria-label="Asignaturas">

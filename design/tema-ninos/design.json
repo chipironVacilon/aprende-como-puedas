@@ -1,0 +1,27 @@
+{
+  "title": "Tema infantil: limpio, amigable y llamativo",
+  "brief": "Rediseño de tema y paleta del portal 'Aprende como puedas' (Primaria 5º, inglés y francés) para niños de 10-11 años: tres direcciones visuales distintas en estructura y estrategia, no solo en color.",
+  "artboards": [
+    {
+      "file": "01-papel-limpio.html",
+      "title": "Papel limpio",
+      "tradeoff": "La más legible y luminosa, con contraste AA y jerarquía clara; es la menos 'juguetona': no genera picos de emoción ni sensación de juego.",
+      "width": 480,
+      "height": 1500
+    },
+    {
+      "file": "02-sticker-fiesta.html",
+      "title": "Sticker fiesta",
+      "tradeoff": "Máximo atractivo inmediato (contornos gruesos, sombras duras, inclinaciones); más ruido visual y riesgo de fatiga si se mantiene durante ejercicios largos.",
+      "width": 480,
+      "height": 1500
+    },
+    {
+      "file": "03-mapa-misiones.html",
+      "title": "Mapa de misiones",
+      "tradeoff": "Convierte el menú en recorrido con los tipos de ejercicio a la vista (buena orientación); ocupa más alto y, si se le añade progreso real, exige guardar estado que hoy la web no tiene.",
+      "width": 480,
+      "height": 1500
+    }
+  ]
+}

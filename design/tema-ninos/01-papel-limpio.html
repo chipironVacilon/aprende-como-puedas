@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papel limpio — Aprende como puedas</title>
+<style>
+  :root {
+    /* superficies */
+    --bg: #fbf8f3;
+    --surface: #ffffff;
+    --line: #e8e1d6;
+    --ink: #1f2a44;
+    --muted: #5c6a85;
+    /* paleta */
+    --violet: #5b4be6;
+    --violet-soft: #ece9ff;
+    --mint: #0e9f78;
+    --mint-soft: #dcf5ec;
+    --amber: #b06f00;
+    --amber-soft: #fff0d6;
+    --rose-soft: #ffe6e9;
+    --sky-soft: #e1f1fe;
+    /* formas */
+    --radius: 24px;
+    --radius-sm: 16px;
+    --shadow: 0 2px 0 #eee7db, 0 14px 28px -20px rgba(31, 42, 68, .5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI Variable Display", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible { outline: 3px solid var(--violet); outline-offset: 3px; border-radius: 14px; }
+
+  .app { width: min(100%, 480px); margin: 0 auto; padding: 28px 20px 40px; }
+
+  /* ---------- cabecera ---------- */
+  .site-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+  .mark { width: 54px; height: 54px; flex: 0 0 auto; }
+  .eyebrow {
+    margin: 0; font-size: .7rem; font-weight: 800; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 { margin: 2px 0 0; font-size: 1.72rem; font-weight: 900; letter-spacing: -.03em; line-height: 1.1; }
+  h1 em { font-style: normal; color: var(--violet); }
+
+  .lead { margin: 0 0 20px; color: var(--muted); font-size: .96rem; max-width: 44ch; }
+
+  .context { display: flex; align-items: center; gap: 8px; margin: 0 0 26px; }
+  .chip {
+    padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); font-size: .8rem; font-weight: 800; letter-spacing: .01em;
+  }
+  .context .sep { color: #b8bfcf; }
+
+  /* ---------- asignaturas ---------- */
+  .subjects { display: grid; gap: 26px; }
+
+  .subject__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .subject__icon {
+    display: grid; place-items: center; width: 44px; height: 44px;
+    border-radius: 14px; font-size: 1.25rem; background: var(--tint);
+  }
+  .subject h2 { margin: 0; font-size: 1.28rem; font-weight: 900; letter-spacing: -.02em; }
+  .subject__count { margin-left: auto; color: var(--muted); font-size: .8rem; font-weight: 700; }
+
+  .subject--en { --tint: var(--mint-soft); --accent: var(--mint); }
+  .subject--fr { --tint: var(--amber-soft); --accent: var(--amber); }
+
+  .activities { display: grid; gap: 12px; }
+
+  .activity {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface); box-shadow: var(--shadow);
+    text-decoration: none; color: inherit;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  }
+  a.activity:hover { transform: translateY(-3px); border-color: #d8cfc0; box-shadow: 0 2px 0 #eee7db, 0 20px 34px -22px rgba(31, 42, 68, .6); }
+  a.activity:active { transform: translateY(-1px); }
+
+  .activity__icon {
+    display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 auto;
+    border-radius: 15px; background: var(--tint); font-size: 1.35rem;
+  }
+  .activity__body { display: grid; gap: 3px; flex: 1 1 auto; min-width: 0; }
+  .activity__title { font-size: 1.05rem; font-weight: 800; letter-spacing: -.01em; }
+  .activity__meta { font-size: .84rem; color: var(--muted); }
+
+  .go {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 18px; border-radius: 999px;
+    background: var(--violet); color: #fff; font-weight: 800; font-size: .9rem; white-space: nowrap;
+  }
+
+  .activity--soon { border-style: dashed; box-shadow: none; background: #fdfbf7; }
+  .activity--soon .activity__icon { background: #f1ece2; }
+  .tag {
+    flex: 0 0 auto; padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px;
+    background: #f6f1e8; color: var(--muted); font-size: .7rem; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+
+  .site-footer { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .84rem; }
+  .site-footer p { margin: 0; }
+
+  /* ---------- paleta de la propuesta ---------- */
+  .palette { margin-top: 26px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .palette h3 { margin: 0 0 4px; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .palette p { margin: 0 0 14px; font-size: .82rem; color: var(--muted); }
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sw { display: grid; gap: 6px; font-size: .7rem; font-weight: 700; color: var(--muted); }
+  .sw i { display: block; height: 38px; border-radius: 12px; border: 1px solid rgba(31, 42, 68, .08); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="site-header">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="gold1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ffd977"/><stop offset=".5" stop-color="#ffbe2e"/><stop offset="1" stop-color="#e8910a"/>
+        </linearGradient>
+        <mask id="under1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="84" height="84">
+          <rect x="-10" y="-10" width="84" height="84" fill="#fff"/>
+          <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" fill="none" stroke="#000" stroke-width="9.9" stroke-linecap="butt"/>
+        </mask>
+      </defs>
+      <g fill="none" stroke-linejoin="round" stroke-linecap="butt">
+        <g mask="url(#under1)">
+          <path d="M 9,58 C 9.67,56 11.33,50.17 13,46 C 14.67,41.83 16.17,36.5 19,33 C 21.83,29.5 25.83,26 30,25 C 34.17,24 40.5,25.17 44,27 C 47.5,28.83 51,32.83 51,36 C 51,39.17 47.17,43.83 44,46 C 40.83,48.17 35.33,49.5 32,49 C 28.67,48.5 25.83,45.5 24,43 C 22.17,40.5 21.5,35.5 21,34" stroke="#1f2a44" stroke-width="10.5"/>
+          <path d="M 9,58 C 9.67,56 11.33,50.17 13,46 C 14.67,41.83 16.17,36.5 19,33 C 21.83,29.5 25.83,26 30,25 C 34.17,24 40.5,25.17 44,27 C 47.5,28.83 51,32.83 51,36 C 51,39.17 47.17,43.83 44,46 C 40.83,48.17 35.33,49.5 32,49 C 28.67,48.5 25.83,45.5 24,43 C 22.17,40.5 21.5,35.5 21,34" stroke="url(#gold1)" stroke-width="6.6"/>
+        </g>
+        <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" stroke="#1f2a44" stroke-width="10.5"/>
+        <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" stroke="url(#gold1)" stroke-width="6.6"/>
+      </g>
+      <g transform="translate(9,58) rotate(108.43)">
+        <path d="M 0,-3.4 L 6.4,0 L 0,3.4 Z" fill="#f6e2b8"/>
+        <path d="M 5.9,-1.088 L 9.6,0 L 5.9,1.088 Z" fill="#1f2a44"/>
+      </g>
+      <g transform="translate(45,9) rotate(-50.19)">
+        <rect x="-6" y="-3.4" width="3.8" height="6.8" rx="1.2" fill="#c7d0e4"/>
+        <rect x="-2.2" y="-3.4" width="5" height="6.8" rx="2.2" fill="#ff6b81"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Ejercicios y juegos</p>
+      <h1>Aprende como <em>puedas</em></h1>
+    </div>
+  </header>
+
+  <main>
+    <p class="lead">Elige la asignatura y la actividad. Todo se abre aquí, en el navegador, sin instalar nada ni tener conexión.</p>
+
+    <p class="context" aria-label="Curso actual">
+      <span class="chip">Primaria</span>
+      <span class="sep" aria-hidden="true">›</span>
+      <span class="chip">5º</span>
+    </p>
+
+    <nav class="subjects" aria-label="Asignaturas">
+      <section class="subject subject--en">
+        <div class="subject__head">
+          <span class="subject__icon" aria-hidden="true">✏️</span>
+          <h2>Inglés</h2>
+          <span class="subject__count">1 actividad</span>
+        </div>
+        <div class="activities">
+          <a class="activity" href="#">
+            <span class="activity__icon" aria-hidden="true">🔤</span>
+            <span class="activity__body">
+              <span class="activity__title">Verbos irregulares</span>
+              <span class="activity__meta">61 verbos · tarjetas, quiz, frases, escucha</span>
+            </span>
+            <span class="go">Empezar <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="subject subject--fr">
+        <div class="subject__head">
+          <span class="subject__icon" aria-hidden="true">🎨</span>
+          <h2>Francés</h2>
+          <span class="subject__count">2 actividades</span>
+        </div>
+        <div class="activities">
+          <a class="activity" href="#">
+            <span class="activity__icon" aria-hidden="true">🌈</span>
+            <span class="activity__body">
+              <span class="activity__title">Colores</span>
+              <span class="activity__meta">11 colores · tarjetas, quiz, parejas, escucha</span>
+            </span>
+            <span class="go">Empezar <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="activity" href="#">
+            <span class="activity__icon" aria-hidden="true">🔢</span>
+            <span class="activity__body">
+              <span class="activity__title">Números del 1 al 30</span>
+              <span class="activity__meta">Tarjetas, quiz, escritura y escucha</span>
+            </span>
+            <span class="go">Empezar <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+    </nav>
+
+    <section class="palette" aria-label="Paleta propuesta">
+      <h3>Paleta</h3>
+      <p>Papel cálido + acentos suaves. Contraste AA en texto y botón.</p>
+      <div class="swatches">
+        <span class="sw"><i style="background:#fbf8f3"></i>papel</span>
+        <span class="sw"><i style="background:#ffffff"></i>tarjeta</span>
+        <span class="sw"><i style="background:#1f2a44"></i>tinta</span>
+        <span class="sw"><i style="background:#5b4be6"></i>violeta</span>
+        <span class="sw"><i style="background:#0e9f78"></i>menta</span>
+        <span class="sw"><i style="background:#b06f00"></i>ámbar</span>
+        <span class="sw"><i style="background:#dcf5ec"></i>menta suave</span>
+        <span class="sw"><i style="background:#fff0d6"></i>ámbar suave</span>
+        <span class="sw"><i style="background:#ecE9ff"></i>violeta suave</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Hecho para practicar en casa. Todo funciona con doble clic en la página: no hace falta conexión.</p>
+  </footer>
+
+</div>
+</body>
+</html>

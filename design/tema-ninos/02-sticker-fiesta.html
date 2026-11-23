@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sticker fiesta — Aprende como puedas</title>
+<style>
+  :root {
+    --bg: #fff7e8;
+    --ink: #1b2450;
+    --muted: #545f86;
+    --rosa: #ff5c8a;
+    --amarillo: #ffc93c;
+    --turquesa: #23c6a8;
+    --morado: #7b5cff;
+    --naranja: #ff7a45;
+    --crema: #fffdf7;
+    --radius: 26px;
+    --borde: 3px solid var(--ink);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background:
+      radial-gradient(circle at 12% 6%, #ffe1a8 0 18%, transparent 19%),
+      radial-gradient(circle at 88% 14%, #cdeeff 0 12%, transparent 13%),
+      radial-gradient(circle at 78% 92%, #ffd6e0 0 16%, transparent 17%),
+      var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI Variable Display", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible { outline: 4px solid var(--morado); outline-offset: 4px; border-radius: 16px; }
+
+  .app { width: min(100%, 480px); margin: 0 auto; padding: 26px 18px 44px; }
+
+  /* ---------- cabecera ---------- */
+  .site-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; margin-bottom: 18px;
+    border: var(--borde); border-radius: var(--radius);
+    background: var(--crema);
+    box-shadow: 6px 6px 0 var(--amarillo);
+    transform: rotate(-1deg);
+  }
+  .mark { width: 56px; height: 56px; flex: 0 0 auto; }
+  .eyebrow {
+    margin: 0; font-size: .68rem; font-weight: 900; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--rosa);
+  }
+  h1 { margin: 2px 0 0; font-size: 1.6rem; font-weight: 900; letter-spacing: -.035em; line-height: 1.05; }
+  h1 em { font-style: normal; color: var(--morado); }
+
+  .lead {
+    margin: 0 0 18px; padding: 12px 16px;
+    border: 2px dashed #c9bda0; border-radius: 18px;
+    background: rgba(255, 255, 255, .6);
+    color: var(--muted); font-size: .92rem; font-weight: 600;
+  }
+
+  .context { display: flex; align-items: center; gap: 8px; margin: 0 0 22px; }
+  .chip {
+    padding: 7px 15px; border: 2px solid var(--ink); border-radius: 999px;
+    background: #fff; font-size: .8rem; font-weight: 900;
+    box-shadow: 3px 3px 0 rgba(27, 36, 80, .22);
+  }
+  .chip--hot { background: var(--amarillo); }
+  .context .sep { font-weight: 900; color: #b9b199; }
+
+  /* ---------- asignaturas ---------- */
+  .subjects { display: grid; gap: 20px; }
+
+  .subject__head {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin: 0 0 12px; padding: 8px 18px 8px 10px;
+    border: var(--borde); border-radius: 999px;
+    background: var(--tint);
+    font-size: 1.12rem; font-weight: 900; letter-spacing: -.01em;
+    box-shadow: 4px 4px 0 rgba(27, 36, 80, .25);
+    transform: rotate(-1.2deg);
+  }
+  .subject__head span[aria-hidden] { font-size: 1.15rem; }
+  .subject--en { --tint: #b8f2e2; }
+  .subject--fr { --tint: #ffd9a8; }
+
+  .activities { display: grid; gap: 14px; }
+
+  .activity {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px;
+    border: var(--borde); border-radius: var(--radius);
+    background: var(--crema);
+    box-shadow: 5px 5px 0 rgba(27, 36, 80, .9);
+    text-decoration: none; color: inherit;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  a.activity:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 rgba(27, 36, 80, .9); }
+  a.activity:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 rgba(27, 36, 80, .9); }
+
+  .activity__icon {
+    display: grid; place-items: center; width: 50px; height: 50px; flex: 0 0 auto;
+    border: 2px solid var(--ink); border-radius: 16px;
+    background: var(--ico); font-size: 1.4rem;
+  }
+  .activity__body { display: grid; gap: 3px; flex: 1 1 auto; min-width: 0; }
+  .activity__title { font-size: 1.05rem; font-weight: 900; letter-spacing: -.01em; }
+  .activity__meta { font-size: .82rem; font-weight: 600; color: var(--muted); }
+
+  .go {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 16px; border: 2px solid var(--ink); border-radius: 999px;
+    background: var(--morado); color: #fff;
+    font-weight: 900; font-size: .88rem; white-space: nowrap;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .activity--soon { background: #fdf6e5; border-style: dashed; box-shadow: none; }
+  .activity--soon .activity__icon { background: #f0e9d8; border-style: dashed; }
+  .tag {
+    flex: 0 0 auto; padding: 7px 12px; border: 2px solid var(--ink); border-radius: 999px;
+    background: var(--amarillo); font-size: .68rem; font-weight: 900;
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+
+  .site-footer {
+    margin-top: 28px; padding: 14px 16px;
+    border: 2px dashed #c9bda0; border-radius: 18px;
+    background: rgba(255, 255, 255, .6);
+    color: var(--muted); font-size: .82rem; font-weight: 600;
+    transform: rotate(.8deg);
+  }
+  .site-footer p { margin: 0; }
+
+  /* ---------- paleta ---------- */
+  .palette {
+    margin-top: 24px; padding: 18px;
+    border: var(--borde); border-radius: var(--radius);
+    background: var(--crema); box-shadow: 5px 5px 0 var(--turquesa);
+    transform: rotate(.6deg);
+  }
+  .palette h3 { margin: 0 0 4px; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .palette p { margin: 0 0 14px; font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sw { display: grid; gap: 6px; font-size: .68rem; font-weight: 800; color: var(--muted); }
+  .sw i { display: block; height: 36px; border-radius: 12px; border: 2px solid var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="site-header">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="gold2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#ffc22e"/><stop offset="1" stop-color="#e8910a"/>
+        </linearGradient>
+        <mask id="under2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="84" height="84">
+          <rect x="-10" y="-10" width="84" height="84" fill="#fff"/>
+          <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" fill="none" stroke="#000" stroke-width="9.9" stroke-linecap="butt"/>
+        </mask>
+      </defs>
+      <g fill="none" stroke-linejoin="round" stroke-linecap="butt">
+        <g mask="url(#under2)">
+          <path d="M 9,58 C 9.67,56 11.33,50.17 13,46 C 14.67,41.83 16.17,36.5 19,33 C 21.83,29.5 25.83,26 30,25 C 34.17,24 40.5,25.17 44,27 C 47.5,28.83 51,32.83 51,36 C 51,39.17 47.17,43.83 44,46 C 40.83,48.17 35.33,49.5 32,49 C 28.67,48.5 25.83,45.5 24,43 C 22.17,40.5 21.5,35.5 21,34" stroke="#1b2450" stroke-width="11"/>
+          <path d="M 9,58 C 9.67,56 11.33,50.17 13,46 C 14.67,41.83 16.17,36.5 19,33 C 21.83,29.5 25.83,26 30,25 C 34.17,24 40.5,25.17 44,27 C 47.5,28.83 51,32.83 51,36 C 51,39.17 47.17,43.83 44,46 C 40.83,48.17 35.33,49.5 32,49 C 28.67,48.5 25.83,45.5 24,43 C 22.17,40.5 21.5,35.5 21,34" stroke="url(#gold2)" stroke-width="6.6"/>
+        </g>
+        <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" stroke="#1b2450" stroke-width="11"/>
+        <path d="M 24,43 C 24.5,41.33 25.5,36.17 27,33 C 28.5,29.83 30.83,27 33,24 C 35.17,21 38,17.5 40,15 C 42,12.5 44.17,10 45,9" stroke="url(#gold2)" stroke-width="6.6"/>
+      </g>
+      <g transform="translate(9,58) rotate(108.43)">
+        <path d="M 0,-3.4 L 6.4,0 L 0,3.4 Z" fill="#f6e2b8"/>
+        <path d="M 5.9,-1.088 L 9.6,0 L 5.9,1.088 Z" fill="#1b2450"/>
+      </g>
+      <g transform="translate(45,9) rotate(-50.19)">
+        <rect x="-6" y="-3.4" width="3.8" height="6.8" rx="1.2" fill="#c7d0e4"/>
+        <rect x="-2.2" y="-3.4" width="5" height="6.8" rx="2.2" fill="#ff5c8a"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Ejercicios y juegos</p>
+      <h1>Aprende como <em>puedas</em></h1>
+    </div>
+  </header>
+
+  <main>
+    <p class="lead">Elige la asignatura y la actividad. Todo se abre aquí, en el navegador, sin instalar nada ni tener conexión.</p>
+
+    <p class="context" aria-label="Curso actual">
+      <span class="chip">Primaria</span>
+      <span class="sep" aria-hidden="true">›</span>
+      <span class="chip chip--hot">5º</span>
+    </p>
+
+    <nav class="subjects" aria-label="Asignaturas">
+      <section class="subject subject--en">
+        <h2 class="subject__head"><span aria-hidden="true">✏️</span> Inglés</h2>
+        <div class="activities">
+          <a class="activity" href="#" style="--ico:#b8f2e2">
+            <span class="activity__icon" aria-hidden="true">🔤</span>
+            <span class="activity__body">
+              <span class="activity__title">Verbos irregulares</span>
+              <span class="activity__meta">61 verbos · tarjetas, quiz, frases</span>
+            </span>
+            <span class="go">¡Vamos! <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="subject subject--fr">
+        <h2 class="subject__head"><span aria-hidden="true">🎨</span> Francés</h2>
+        <div class="activities">
+          <a class="activity" href="#" style="--ico:#ffd9a8">
+            <span class="activity__icon" aria-hidden="true">🌈</span>
+            <span class="activity__body">
+              <span class="activity__title">Colores</span>
+              <span class="activity__meta">11 colores · tarjetas, quiz, parejas</span>
+            </span>
+            <span class="go">¡Vamos! <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="activity" href="#" style="--ico:#cfe0ff">
+            <span class="activity__icon" aria-hidden="true">🔢</span>
+            <span class="activity__body">
+              <span class="activity__title">Números del 1 al 30</span>
+              <span class="activity__meta">Tarjetas, quiz, escritura y escucha</span>
+            </span>
+            <span class="go">¡Vamos! <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+    </nav>
+
+    <section class="palette" aria-label="Paleta propuesta">
+      <h3>Paleta</h3>
+      <p>Saturada sobre crema, con contorno de tinta. Máximo contraste lúdico.</p>
+      <div class="swatches">
+        <span class="sw"><i style="background:#fff7e8"></i>crema</span>
+        <span class="sw"><i style="background:#1b2450"></i>tinta</span>
+        <span class="sw"><i style="background:#ff5c8a"></i>rosa</span>
+        <span class="sw"><i style="background:#ffc93c"></i>amarillo</span>
+        <span class="sw"><i style="background:#23c6a8"></i>turquesa</span>
+        <span class="sw"><i style="background:#7b5cff"></i>morado</span>
+        <span class="sw"><i style="background:#ff7a45"></i>naranja</span>
+        <span class="sw"><i style="background:#b8f2e2"></i>menta</span>
+        <span class="sw"><i style="background:#ffd9a8"></i>melón</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Hecho para practicar en casa. Todo funciona con doble clic en la página: no hace falta conexión.</p>
+  </footer>
+
+</div>
+</body>
+</html>

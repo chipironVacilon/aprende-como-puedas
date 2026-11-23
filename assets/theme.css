@@ -1,0 +1,83 @@
+/*
+ * Aprende como puedas — tema "Sticker fiesta" (niños).
+ *
+ * Única fuente de verdad de la paleta. Las páginas consumen estos tokens y no
+ * vuelven a declarar valores de color propios del tema.
+ * Sin recursos externos: pilas de fuentes del sistema y assets locales.
+ * Referencia visual: design/tema-ninos/02-sticker-fiesta.html
+ */
+
+:root {
+  color-scheme: light;
+
+  /* superficies */
+  --bg: #fff7e8;
+  --bg-2: #ffeed0;
+  --card: #fffdf7;
+  --card-strong: #ffffff;
+  --tint: #fdf1da;
+
+  /* tinta */
+  --ink: #1b2450;
+  --ink-soft: #10162e;
+  --muted: #545f86;
+
+  /* líneas y rellenos */
+  --line: #e8d9ba;
+  --line-strong: #cbb68e;
+  --outline: #1b2450;
+  --fill: rgba(27, 36, 80, 0.05);
+  --hover: rgba(27, 36, 80, 0.07);
+
+  /* acentos del tema */
+  --gold: #ffc93c;
+  --rosa: #ff5c8a;
+  --turquesa: #23c6a8;
+  --morado: #7b5cff;
+  --morado-ink: #5b3ce6;
+  --naranja: #ff7a45;
+  --cielo: #2fa8ff;
+
+  /* estados (AA sobre superficies claras) */
+  --ok: #0f8f6c;
+  --bad: #c8144a;
+
+  /* formas */
+  --radius: 26px;
+  --radius-sm: 16px;
+  --outline-w: 2px;
+  --borde: 2px solid var(--outline);
+  --shadow: 5px 5px 0 rgba(27, 36, 80, 0.85);
+  --shadow-soft: 4px 4px 0 rgba(27, 36, 80, 0.16);
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  background:
+    radial-gradient(circle at 12% 4%, #ffe1a8 0 16%, transparent 17%),
+    radial-gradient(circle at 90% 12%, #cdeeff 0 11%, transparent 12%),
+    radial-gradient(circle at 80% 94%, #ffd6e0 0 15%, transparent 16%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI Variable Display", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 4px solid var(--morado);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
