@@ -193,3 +193,9 @@ y un viaje de ida y vuelta con clic real (portal → Colores → cabecera → po
 comprobaciones, verdes. Auditoría aparte: las 15 referencias relativas de las cuatro páginas
 existen. No existen páginas de asignatura intermedias (Primaria, 5º, Inglés y Francés son
 `<details>` del portal), así que «sub-página de asignatura» es cada página de actividad.
+
+L22 (entrega, navegabilidad): el arreglo va en `9213abb` (`fix(navegacion): keep a
+working way back on every page`), publicado en `main` por fast-forward tras rebasar
+sobre `d01c638` (el merge del PR #1, que ya había llevado los 16 commits anteriores a
+`main`). El rebase dejó el mismo hash de árbol, así que lo publicado es exactamente lo
+verificado: 853 comprobaciones en `play-test.mjs` y 120 en `verificar.mjs`, verdes.
