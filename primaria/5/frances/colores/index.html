@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Los colores en francés · Francés para 5º de Primaria</title>
+<meta name="description" content="Actividad para aprender los colores en francés: tarjetas, quiz, parejas y escucha. Se abre en el navegador, sin instalar nada y sin conexión.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b1020">
+<style>
+  :root {
+    --bg: #0b1020;
+    --card: rgba(255, 255, 255, 0.055);
+    --card-strong: rgba(255, 255, 255, 0.09);
+    --line: rgba(255, 255, 255, 0.12);
+    --ink: #eef2ff;
+    --muted: #9aa8c7;
+    --gold: #ffd166;
+    --ok: #4ade80;
+    --bad: #fb7185;
+    --study: #4ade80;
+    --quiz: #8b7cff;
+    --memory: #22d3ee;
+    --listen: #ffb347;
+    --accent: #ffb347;
+    --radius: 20px;
+    --shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background:
+      radial-gradient(1100px 620px at 12% -12%, #2a1a5e 0%, transparent 62%),
+      radial-gradient(900px 520px at 92% -6%, #0b3b53 0%, transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, #1b1240 0%, transparent 65%),
+      var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI Variable Display", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  button { font: inherit; color: inherit; }
+
+  :focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+    border-radius: 14px;
+  }
+
+  .app {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: 18px 16px calc(30px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- topbar ---------- */
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-left: -6px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .brand:hover { background: rgba(255, 255, 255, 0.05); }
+
+  .brand__logo {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 24%, transparent);
+    font-size: 1.1rem;
+  }
+
+  .brand__text { display: grid; gap: 1px; min-width: 0; }
+
+  .brand__eyebrow {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .brand__name { font-size: 1.02rem; font-weight: 800; letter-spacing: -0.01em; }
+
+  .stats { display: flex; gap: 8px; margin-left: auto; }
+
+  .stat {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: #c9d2e6;
+    font-size: 0.86rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .stat b { color: var(--ink); }
+
+  /* ---------- screens ---------- */
+
+  .view { display: grid; gap: 16px; }
+  .view:focus { outline: none; }
+
+  .hero { display: grid; gap: 8px; }
+
+  .eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 6.4vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(120deg, #fbbf24, #f472b6 70%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lead {
+    margin: 0;
+    max-width: 54ch;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .lead b { color: #d5dcef; }
+
+  .banner {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: #c9d2e6;
+    font-size: 0.86rem;
+  }
+
+  .banner b { color: var(--ink); }
+
+  .modes { display: grid; gap: 10px; }
+
+  @media (min-width: 560px) {
+    .modes { grid-template-columns: 1fr 1fr; }
+  }
+
+  .mode {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .mode:hover:not(:disabled) {
+    background: var(--card-strong);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .mode:disabled { cursor: not-allowed; opacity: 0.55; box-shadow: none; }
+
+  .mode__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mode-color, var(--accent)) 22%, transparent);
+    font-size: 1.15rem;
+  }
+
+  .mode__body { display: grid; gap: 2px; min-width: 0; }
+  .mode__title { font-size: 1rem; font-weight: 800; }
+  .mode__desc { font-size: 0.82rem; color: var(--muted); }
+  .mode__go { margin-left: auto; color: var(--muted); font-weight: 800; }
+
+  .mode--study { --mode-color: var(--study); }
+  .mode--quiz { --mode-color: var(--quiz); }
+  .mode--memory { --mode-color: var(--memory); }
+  .mode--listen { --mode-color: var(--listen); }
+
+  .screen-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .back:hover { background: var(--card-strong); }
+
+  .screen-head h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .screen-head h1:focus { outline: none; }
+
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .progress b { color: var(--ink); }
+
+  .bar {
+    flex: 1 1 auto;
+    min-width: 40px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+  }
+
+  .bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fbbf24, #f472b6);
+    transition: width 0.25s ease;
+  }
+
+  .card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .prompt {
+    display: grid;
+    gap: 10px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .prompt__swatch {
+    width: min(52vw, 170px);
+    aspect-ratio: 1;
+    border-radius: 26px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 0 0 6px rgba(0, 0, 0, 0.12), 0 10px 30px -18px rgba(0, 0, 0, 0.9);
+  }
+
+  .prompt__word {
+    margin: 0;
+    font-size: clamp(1.5rem, 7vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .prompt__question { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+  .speak {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card-strong);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .speak:hover { background: rgba(255, 255, 255, 0.14); }
+
+  .options { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+
+  .option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 64px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    font-size: 1.02rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .option:hover:not(:disabled) {
+    background: var(--card-strong);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+  }
+
+  .option:disabled { cursor: default; opacity: 0.6; }
+
+  .option.is-ok {
+    background: rgba(74, 222, 128, 0.16);
+    border-color: var(--ok);
+    color: #d7ffe4;
+    opacity: 1;
+  }
+
+  .option.is-bad {
+    background: rgba(251, 113, 133, 0.16);
+    border-color: var(--bad);
+    color: #ffe0e6;
+    opacity: 1;
+  }
+
+  .option__swatch {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+  }
+
+  .feedback {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.9rem;
+  }
+
+  .feedback strong { font-size: 0.98rem; }
+  .feedback b { color: #fff; }
+  .feedback[data-tone="ok"] { border-color: rgba(74, 222, 128, 0.5); background: rgba(74, 222, 128, 0.1); }
+  .feedback[data-tone="bad"] { border-color: rgba(251, 113, 133, 0.5); background: rgba(251, 113, 133, 0.1); }
+
+  .primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #a78bfa, #7c5cff);
+    color: #0b1020;
+    font-size: 0.95rem;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .primary:hover { filter: brightness(1.06); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .colors-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .color-card {
+    display: grid;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .color-card:hover { background: var(--card-strong); }
+
+  .color-card__swatch {
+    height: 64px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .color-card__fr { font-size: 1.02rem; font-weight: 900; }
+  .color-card__es { font-size: 0.8rem; color: var(--muted); }
+
+  .memory-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .memory-card {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 4;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    font-size: 0.9rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+
+  .memory-card:hover { background: var(--card-strong); }
+  .memory-card.is-open { background: rgba(255, 255, 255, 0.1); }
+  .memory-card.is-done { border-color: rgba(74, 222, 128, 0.55); background: rgba(74, 222, 128, 0.12); }
+  .memory-card__back { font-size: 1.4rem; opacity: 0.6; }
+
+  .memory-card__swatch {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .summary { display: grid; gap: 6px; justify-items: center; text-align: center; }
+
+  .summary__score {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .summary__score b { font-size: 2.6rem; color: var(--ink); letter-spacing: -0.03em; }
+
+  .summary__message { margin: 0; font-size: 1.15rem; font-weight: 800; }
+
+  .footnote {
+    margin: 22px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 460px) {
+    .options { grid-template-columns: 1fr; }
+    .memory-grid { gap: 6px; }
+    .memory-card { font-size: 0.78rem; border-radius: 12px; }
+    .brand__eyebrow { display: none; }
+    .stat { padding: 5px 10px; font-size: 0.8rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="../../../index.html" aria-label="Volver al menú de actividades">
+      <span class="brand__logo" aria-hidden="true">🎨</span>
+      <span class="brand__text">
+        <span class="brand__eyebrow">Francés · 5º</span>
+        <span class="brand__name">Colores</span>
+      </span>
+    </a>
+    <div class="stats" aria-label="Tu progreso">
+      <span class="stat" title="Estrellas conseguidas">⭐ <b id="stat-stars">0</b></span>
+      <span class="stat" title="Mejor racha de aciertos">🔥 <b id="stat-streak">0</b></span>
+    </div>
+  </header>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Los once colores que se enseñan en clase, con su color real y su traducción.
+  const COLORS = [
+    { fr: "rouge", es: "rojo", hex: "#ef4444" },
+    { fr: "bleu", es: "azul", hex: "#3b82f6" },
+    { fr: "vert", es: "verde", hex: "#22c55e" },
+    { fr: "jaune", es: "amarillo", hex: "#facc15" },
+    { fr: "orange", es: "naranja", hex: "#fb923c" },
+    { fr: "violet", es: "violeta", hex: "#a855f7" },
+    { fr: "rose", es: "rosa", hex: "#f472b6" },
+    { fr: "marron", es: "marrón", hex: "#8a5a2b" },
+    { fr: "gris", es: "gris", hex: "#9ca3af" },
+    { fr: "noir", es: "negro", hex: "#1f2937" },
+    { fr: "blanc", es: "blanco", hex: "#f8fafc" }
+  ];
+
+  const KEY = "acp.frances.colores";
+  const QUIZ_LENGTH = 10;
+  const PAIRS = 6;
+
+  const view = document.getElementById("view");
+  const starsEl = document.getElementById("stat-stars");
+  const streakEl = document.getElementById("stat-streak");
+  const footnote = document.getElementById("footnote");
+
+  const profile = loadProfile();
+  const timers = new Set();
+  const state = { screen: "home", quiz: null, memory: null };
+
+  /* ---------- progreso ---------- */
+
+  function loadProfile() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY));
+      if (raw && typeof raw === "object") {
+        return { stars: Number(raw.stars) || 0, best: Number(raw.best) || 0 };
+      }
+    } catch (error) {
+      // Sin almacenamiento (o con él bloqueado) se juega igual: no se guarda.
+    }
+    return { stars: 0, best: 0 };
+  }
+
+  function saveProfile() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(profile));
+    } catch (error) {
+      // Igual que arriba: el progreso se queda sólo en esta visita.
+    }
+  }
+
+  function paintStats() {
+    starsEl.textContent = profile.stars;
+    streakEl.textContent = profile.best;
+  }
+
+  /* ---------- voz ---------- */
+
+  const Speech = {
+    supported:
+      typeof window.speechSynthesis !== "undefined" &&
+      typeof window.SpeechSynthesisUtterance === "function",
+    voices: [],
+
+    init() {
+      if (!this.supported) {
+        paintNote();
+        return;
+      }
+      const load = () => {
+        this.voices = window.speechSynthesis.getVoices() || [];
+        paintNote();
+        if (state.screen === "home") renderHome();
+      };
+      load();
+      window.speechSynthesis.addEventListener("voiceschanged", load);
+    },
+
+    frenchVoice() {
+      return this.voices.find((voice) => /^fr([-_]|$)/i.test(voice.lang)) || null;
+    },
+
+    canListen() {
+      return this.supported && Boolean(this.frenchVoice());
+    },
+
+    say(text) {
+      if (!this.supported) return false;
+      const voice = this.frenchVoice();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = voice ? voice.lang : "fr-FR";
+      if (voice) utterance.voice = voice;
+      utterance.rate = 0.85;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      return true;
+    }
+  };
+
+  function paintNote() {
+    if (!Speech.supported) {
+      footnote.textContent =
+        "Este navegador no puede leer en voz alta: las actividades funcionan sin sonido. " +
+        "El resto de la web tampoco necesita conexión.";
+      return;
+    }
+    if (!Speech.frenchVoice()) {
+      footnote.textContent =
+        "Tu equipo todavía no tiene una voz en francés, así que no hay sonido. " +
+        "Las actividades funcionan igual; si añades una voz en francés al sistema, se activa sola.";
+      return;
+    }
+    footnote.textContent =
+      "El sonido usa la voz francesa del navegador: no hace falta conexión. " +
+      "Toca una tarjeta para volver a escucharla.";
+  }
+
+  /* ---------- utilidades ---------- */
+
+  const random = (limit) => Math.floor(Math.random() * limit);
+  const pick = (list) => list[random(list.length)];
+
+  function shuffle(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = random(i + 1);
+      const swap = copy[i];
+      copy[i] = copy[j];
+      copy[j] = swap;
+    }
+    return copy;
+  }
+
+  function later(callback, ms) {
+    const id = setTimeout(() => {
+      timers.delete(id);
+      callback();
+    }, ms);
+    timers.add(id);
+  }
+
+  function clearTimers() {
+    timers.forEach((id) => clearTimeout(id));
+    timers.clear();
+  }
+
+  function renderScreen(html, focusSelector) {
+    clearTimers();
+    view.innerHTML = html;
+    const target = focusSelector ? view.querySelector(focusSelector) : null;
+    if (target) target.focus();
+    else view.focus();
+  }
+
+  /* ---------- pantallas ---------- */
+
+  function modeCard(action, icon, title, description, disabled) {
+    return `
+      <button class="mode mode--${action}" data-action="${action}"${disabled ? " disabled" : ""}>
+        <span class="mode__icon" aria-hidden="true">${icon}</span>
+        <span class="mode__body">
+          <span class="mode__title">${title}</span>
+          <span class="mode__desc">${description}</span>
+        </span>
+        <span class="mode__go" aria-hidden="true">→</span>
+      </button>`;
+  }
+
+  function homeHtml() {
+    const canListen = Speech.canListen();
+    return `
+      <section class="hero">
+        <p class="eyebrow">Francés · 5º de Primaria</p>
+        <h1>Los <em>colores</em></h1>
+        <p class="lead">Once colores en francés, con su color de verdad y su traducción al
+          español. Elige cómo quieres practicar: mirar, elegir, emparejar o escuchar.</p>
+      </section>
+      ${canListen ? "" : `
+      <div class="banner" role="status">
+        <span aria-hidden="true">🔈</span>
+        <span>Las actividades funcionan sin sonido. Para escuchar hace falta una
+          <b>voz en francés</b> en el navegador; si no la hay, "Escucha" queda apagado.</span>
+      </div>`}
+      <div class="modes">
+        ${modeCard("study", "🃏", "Tarjetas", "Los once colores con su nombre en francés")}
+        ${modeCard("quiz", "⚡", "Quiz", "Diez preguntas para elegir el color correcto")}
+        ${modeCard("memory", "🧩", "Parejas", "Empareja cada nombre con su color")}
+        ${modeCard("listen", "🎧", "Escucha", canListen ? "Oye el color en francés y encuéntralo" : "Necesita una voz en francés en este equipo", !canListen)}
+      </div>`;
+  }
+
+  function studyHtml() {
+    return `
+      <div class="screen-head">
+        <button class="back" data-action="home">← Menú</button>
+        <h1 tabindex="-1">Tarjetas</h1>
+      </div>
+      <p class="lead">${Speech.canListen()
+        ? "Toca una tarjeta para escuchar cómo se dice."
+        : "Los once colores con su nombre en francés y su traducción."}</p>
+      <div class="colors-grid">
+        ${COLORS.map((color) => `
+          <button class="color-card" data-action="speak" data-say="${color.fr}"
+            aria-label="${color.fr}, ${color.es}">
+            <span class="color-card__swatch" style="background:${color.hex}" aria-hidden="true"></span>
+            <span class="color-card__fr">${color.fr}</span>
+            <span class="color-card__es">${color.es}</span>
+          </button>`).join("")}
+      </div>
+      <p class="lead">En francés el color va <b>detrás</b> del nombre: <i>une fleur rouge</i>
+        es una flor roja.</p>`;
+  }
+
+  /* ---------- quiz y escucha ---------- */
+
+  function newRound(listen) {
+    const target = pick(COLORS);
+    const type = listen ? "listen-swatch" : pick(["swatch-fr", "fr-swatch", "es-fr"]);
+    const others = shuffle(COLORS.filter((color) => color.fr !== target.fr)).slice(0, 3);
+    return { target, type, options: shuffle([target, ...others]) };
+  }
+
+  function startQuiz(listen) {
+    state.screen = listen ? "listen" : "quiz";
+    state.memory = null;
+    state.quiz = {
+      index: 0,
+      total: QUIZ_LENGTH,
+      correct: 0,
+      streak: 0,
+      answered: false,
+      chosen: null,
+      listen,
+      round: newRound(listen)
+    };
+    renderQuiz({ focus: state.quiz.listen ? "[data-action='speak']" : ".option" });
+    if (listen) Speech.say(state.quiz.round.target.fr);
+  }
+
+  function promptHtml(round, listen) {
+    const target = round.target;
+    if (listen) {
+      return `<button class="speak" data-action="speak" data-say="${target.fr}">
+        🔊 Escuchar otra vez</button>`;
+    }
+    if (round.type === "swatch-fr") {
+      return `<span class="prompt__swatch" style="background:${target.hex}"
+        role="img" aria-label="Color ${target.es}"></span>`;
+    }
+    if (round.type === "fr-swatch") {
+      return `<p class="prompt__word">${target.fr}</p>`;
+    }
+    return `<p class="prompt__word">${target.es}</p>`;
+  }
+
+  function questionText(round, listen) {
+    if (listen) return "Escucha el color y elige cuál es.";
+    if (round.type === "swatch-fr") return "¿Cómo se dice este color en francés?";
+    if (round.type === "fr-swatch") return "¿De qué color se trata?";
+    return "¿Cómo se dice en francés?";
+  }
+
+  function optionHtml(option, round, quiz) {
+    const swatchOption = round.type === "fr-swatch" || round.type === "listen-swatch";
+    const isRight = quiz.answered && option.fr === round.target.fr;
+    const isChosen = quiz.answered && quiz.chosen === option.fr;
+    const classes = ["option"];
+    if (isRight) classes.push("is-ok");
+    else if (isChosen) classes.push("is-bad");
+    const content = swatchOption
+      ? `<span class="option__swatch" style="background:${option.hex}" aria-hidden="true"></span>`
+      : `<span>${option.fr}</span>`;
+    const label = swatchOption ? ` aria-label="El color ${option.es}"` : "";
+    return `<button class="${classes.join(" ")}" data-action="answer"
+      data-value="${option.fr}"${quiz.answered ? " disabled" : ""}${label}>${content}</button>`;
+  }
+
+  function feedbackHtml(quiz) {
+    if (!quiz.answered) return "";
+    const right = quiz.chosen === quiz.round.target.fr;
+    const target = quiz.round.target;
+    return `
+      <div class="feedback" data-tone="${right ? "ok" : "bad"}" aria-live="polite">
+        <strong>${right ? "¡Bien!" : "Casi…"}</strong>
+        <span><b>${target.fr}</b> es ${target.es}.</span>
+      </div>
+      <button class="primary" data-action="next" data-autofocus>
+        ${quiz.index + 1 < quiz.total ? "Siguiente →" : "Ver resultado →"}
+      </button>`;
+  }
+
+  function quizHtml() {
+    const quiz = state.quiz;
+    const round = quiz.round;
+    return `
+      <div class="screen-head">
+        <button class="back" data-action="home">← Menú</button>
+        <h1 tabindex="-1">${quiz.listen ? "Escucha" : "Quiz"}</h1>
+      </div>
+      <div class="progress">
+        <span>Pregunta <b>${quiz.index + 1}</b> de ${quiz.total}</span>
+        <span class="bar" aria-hidden="true">
+          <i style="width:${Math.round((quiz.index / quiz.total) * 100)}%"></i>
+        </span>
+        <span>🔥 ${quiz.streak}</span>
+      </div>
+      <div class="card prompt">
+        ${promptHtml(round, quiz.listen)}
+        <p class="prompt__question">${questionText(round, quiz.listen)}</p>
+      </div>
+      <div class="options">
+        ${round.options.map((option) => optionHtml(option, round, quiz)).join("")}
+      </div>
+      ${feedbackHtml(quiz)}`;
+  }
+
+  function renderQuiz(options) {
+    const focus = options && options.focus;
+    renderScreen(quizHtml(), focus || null);
+  }
+
+  function answer(value) {
+    const quiz = state.quiz;
+    if (!quiz || quiz.answered) return;
+    quiz.answered = true;
+    quiz.chosen = value;
+    if (value === quiz.round.target.fr) {
+      quiz.correct += 1;
+      quiz.streak += 1;
+      profile.stars += 1;
+      profile.best = Math.max(profile.best, quiz.streak);
+      saveProfile();
+      paintStats();
+    } else {
+      quiz.streak = 0;
+    }
+    if (quiz.listen) Speech.say(quiz.round.target.fr);
+    renderQuiz({ focus: "[data-action='next']" });
+  }
+
+  function nextRound() {
+    const quiz = state.quiz;
+    if (!quiz) return;
+    if (quiz.index + 1 >= quiz.total) {
+      state.screen = quiz.listen ? "listen" : "quiz";
+      renderScreen(summaryHtml(), "[data-action='again']");
+      return;
+    }
+    quiz.index += 1;
+    quiz.answered = false;
+    quiz.chosen = null;
+    quiz.round = newRound(quiz.listen);
+    renderQuiz({ focus: quiz.listen ? "[data-action='speak']" : ".option" });
+    if (quiz.listen) Speech.say(quiz.round.target.fr);
+  }
+
+  function summaryHtml() {
+    const quiz = state.quiz;
+    const ratio = quiz.correct / quiz.total;
+    const message = ratio === 1
+      ? "¡Perfecto, todo bien!"
+      : ratio >= 0.7
+        ? "¡Muy bien!"
+        : ratio >= 0.4
+          ? "Vas cogiendo el ritmo"
+          : "Sigue practicando, ya verás";
+    return `
+      <div class="screen-head">
+        <button class="back" data-action="home">← Menú</button>
+        <h1 tabindex="-1">Resultado</h1>
+      </div>
+      <div class="card summary">
+        <p class="summary__score"><b>${quiz.correct}</b> de ${quiz.total}</p>
+        <p class="summary__message">${message}</p>
+        <p class="lead">${quiz.correct === 1
+          ? "Has ganado 1 estrella en esta ronda."
+          : `Has ganado ${quiz.correct} estrellas en esta ronda.`}</p>
+      </div>
+      <div class="actions">
+        <button class="primary" data-action="again" data-mode="${quiz.listen ? "listen" : "quiz"}">
+          Otra ronda →
+        </button>
+        <button class="back" data-action="home">Volver al menú</button>
+      </div>`;
+  }
+
+  /* ---------- parejas ---------- */
+
+  function startMemory() {
+    state.screen = "memory";
+    state.quiz = null;
+    const chosen = shuffle(COLORS).slice(0, PAIRS);
+    const cards = shuffle(chosen.flatMap((color) => [
+      { key: color.fr, kind: "word", color },
+      { key: color.fr, kind: "swatch", color }
+    ]));
+    state.memory = {
+      cards,
+      open: [],
+      done: new Set(),
+      moves: 0,
+      locked: false,
+      finished: false,
+      earned: 0,
+      announce: "",
+      focus: null
+    };
+    renderScreen(memoryHtml(), "h1");
+  }
+
+  function memoryCardHtml(card, index, game) {
+    const isDone = game.done.has(index);
+    const isOpen = isDone || game.open.includes(index);
+    if (!isOpen) {
+      return `<button class="memory-card" data-action="flip" data-index="${index}"
+        aria-label="Carta boca abajo, ${index + 1} de ${game.cards.length}">
+        <span class="memory-card__back" aria-hidden="true">?</span>
+      </button>`;
+    }
+    const face = card.kind === "swatch"
+      ? `<span class="memory-card__swatch" style="background:${card.color.hex}" aria-hidden="true"></span>`
+      : `<span>${card.color.fr}</span>`;
+    const label = card.kind === "swatch" ? `El color ${card.color.es}` : card.color.fr;
+    return `<button class="memory-card ${isDone ? "is-done" : "is-open"}"
+      data-index="${index}" aria-label="${label}">${face}</button>`;
+  }
+
+  function memoryHtml() {
+    const game = state.memory;
+    const pairsDone = game.done.size / 2;
+    return `
+      <div class="screen-head">
+        <button class="back" data-action="home">← Menú</button>
+        <h1 tabindex="-1">Parejas</h1>
+      </div>
+      <div class="progress">
+        <span>Parejas <b>${pairsDone}</b> de ${PAIRS}</span>
+        <span class="bar" aria-hidden="true">
+          <i style="width:${Math.round((game.done.size / game.cards.length) * 100)}%"></i>
+        </span>
+        <span>Intentos ${game.moves}</span>
+      </div>
+      <p class="lead">Encuentra cada nombre con su color.
+        ${game.open.length === 0 ? "Toca dos cartas." : "Elige otra carta."}</p>
+      <div class="memory-grid">
+        ${game.cards.map((card, index) => memoryCardHtml(card, index, game)).join("")}
+      </div>
+      <p class="lead" role="status" aria-live="polite">${game.announce}</p>
+      ${game.finished ? `
+        <div class="card summary">
+          <p class="summary__score"><b>${game.earned}</b> ⭐</p>
+          <p class="summary__message">${game.moves <= 8
+            ? "¡Memoria de elefante!"
+            : game.moves <= 11
+              ? "¡Muy bien!"
+              : "Lo has conseguido"}</p>
+          <p class="lead">Has encontrado las ${PAIRS} parejas en ${game.moves} intentos.</p>
+        </div>
+        <div class="actions">
+          <button class="primary" data-action="memory">Otra vez →</button>
+          <button class="back" data-action="home">Volver al menú</button>
+        </div>` : ""}`;
+  }
+
+  function flip(index) {
+    const game = state.memory;
+    if (!game || game.locked || game.finished) return;
+    if (game.done.has(index) || game.open.includes(index)) return;
+
+    game.open.push(index);
+    game.focus = index;
+
+    if (game.open.length < 2) {
+      renderScreen(memoryHtml(), `[data-index="${index}"]`);
+      return;
+    }
+
+    game.moves += 1;
+    const first = game.cards[game.open[0]];
+    const second = game.cards[game.open[1]];
+
+    if (first.key === second.key) {
+      game.done.add(game.open[0]);
+      game.done.add(game.open[1]);
+      game.open = [];
+      game.announce = `¡Pareja! ${first.key} es ${first.color.es}.`;
+      Speech.say(first.key);
+      if (game.done.size === game.cards.length) {
+        game.finished = true;
+        game.earned = game.moves <= 8 ? 3 : game.moves <= 11 ? 2 : 1;
+        profile.stars += game.earned;
+        saveProfile();
+        paintStats();
+      }
+      renderScreen(memoryHtml(), game.finished ? "[data-action='memory']" : `[data-index="${index}"]`);
+      return;
+    }
+
+    game.locked = true;
+    game.announce = "No era pareja. Inténtalo otra vez.";
+    renderScreen(memoryHtml(), null);
+    later(() => {
+      game.open = [];
+      game.locked = false;
+      game.announce = "";
+      renderScreen(memoryHtml(), `[data-index="${game.focus}"]`);
+    }, 900);
+  }
+
+  /* ---------- navegación ---------- */
+
+  function renderHome() {
+    state.screen = "home";
+    state.quiz = null;
+    state.memory = null;
+    renderScreen(homeHtml(), "h1");
+  }
+
+  view.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-action]");
+    if (!trigger) return;
+    const action = trigger.dataset.action;
+
+    if (action === "home") return renderHome();
+    if (action === "study") {
+      state.screen = "study";
+      state.quiz = null;
+      state.memory = null;
+      renderScreen(studyHtml(), "h1");
+      return;
+    }
+    if (action === "quiz") return startQuiz(false);
+    if (action === "listen") return startQuiz(true);
+    if (action === "memory") return startMemory();
+    if (action === "answer") return answer(trigger.dataset.value);
+    if (action === "next") return nextRound();
+    if (action === "again") return startQuiz(trigger.dataset.mode === "listen");
+    if (action === "flip") return flip(Number(trigger.dataset.index));
+    if (action === "speak") {
+      Speech.say(trigger.dataset.say);
+      return;
+    }
+  });
+
+  paintStats();
+  Speech.init();
+  renderScreen(homeHtml(), "h1");
+})();
+</script>
+</body>
+</html>
