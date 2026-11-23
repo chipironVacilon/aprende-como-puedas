@@ -16,7 +16,8 @@ Primaria
     │                              escucha y adivina, escribe la palabra, arcade
     │                              del marcianito e invasores
     └── Francés
-        └── Colores              → Vacío de momento
+        ├── Colores              → Tarjetas, quiz, parejas y escucha
+        └── Números del 1 al 30  → Tarjetas, quiz, escritura y escucha
 ```
 
 La página principal (`index.html`) es el menú: cabecera con el logotipo (un lápiz
@@ -31,6 +32,8 @@ index.html                                  el menú (portal)
 assets/logo.svg                             logotipo; también es el favicon
 assets/icon-180.png                         icono para móvil y tableta
 primaria/5/ingles/verbos-irregulares/       la actividad de inglés, completa
+primaria/5/frances/colores/                 los colores en francés
+primaria/5/frances/numeros/                 los números del 1 al 30 en francés
 ```
 
 Cada actividad vive en su propia carpeta, con todo lo que necesita dentro
@@ -74,6 +77,28 @@ el menú sólo guarda un enlace a su `index.html`.
 3. Abre el `index.html` de la raíz y comprueba que el enlace lleva a la actividad.
 
 No hay que compilar nada: los ficheros se editan y se abren tal cual.
+
+## Las actividades de francés
+
+Las dos son una página autocontenida (`index.html` con su CSS y su JavaScript dentro) y
+tienen la misma estructura: una cabecera con el enlace de vuelta al menú, el progreso
+(estrellas y mejor racha) y cuatro modos.
+
+- **Colores** (`primaria/5/frances/colores/`): los once colores básicos con su color real
+  y su traducción. Tarjetas para mirar y escuchar, quiz de diez preguntas, parejas para
+  emparejar cada nombre con su color y escucha para reconocer el color de oído.
+- **Números del 1 al 30** (`primaria/5/frances/numeros/`): los treinta números con su
+  escritura (`dix-sept`, `vingt et un`, `vingt-deux`…), tarjetas, quiz de ida y vuelta
+  (del número a la palabra y de la palabra al número), escritura con teclado y escucha.
+  La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
+
+El sonido lo pone la voz francesa del navegador (`speechSynthesis`), así que no hay
+audios que descargar ni conexión que necesitar. Si el equipo no tiene ninguna voz en
+francés, las actividades funcionan igual sin sonido y lo explican; al añadir una voz al
+sistema, el modo "Escucha" se activa solo.
+
+El progreso se guarda en el propio navegador (`localStorage`); si está bloqueado, se
+juega igual y no se guarda nada.
 
 ## La actividad de verbos irregulares
 
