@@ -34,6 +34,7 @@ assets/icon-180.png                         icono para móvil y tableta
 primaria/5/ingles/verbos-irregulares/       la actividad de inglés, completa
 primaria/5/frances/colores/                 los colores en francés
 primaria/5/frances/numeros/                 los números del 1 al 30 en francés
+primaria/5/frances/verificar.mjs            comprobación de las dos actividades
 ```
 
 Cada actividad vive en su propia carpeta, con todo lo que necesita dentro
@@ -99,6 +100,16 @@ sistema, el modo "Escucha" se activa solo.
 
 El progreso se guarda en el propio navegador (`localStorage`); si está bloqueado, se
 juega igual y no se guarda nada.
+
+Las dos actividades tienen una comprobación de navegador, sin dependencias (sólo necesita
+un Chromium instalado). Abre las tres páginas, juega a los modos, revisa las palabras y los
+enlaces, mira que nada desborde a 390 px y falla si algo lanza un error:
+
+```bash
+cd primaria/5/frances
+node verificar.mjs                    # 82 comprobaciones
+node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
+```
 
 ## La actividad de verbos irregulares
 
