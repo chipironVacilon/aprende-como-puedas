@@ -16,8 +16,8 @@ Primaria
     │                              escucha y adivina, escribe la palabra, arcade
     │                              del marcianito e invasores
     └── Francés
-        ├── Colores              → Tarjetas, quiz, parejas y escucha
-        └── Números del 1 al 30  → Tarjetas, quiz, escritura y escucha
+        ├── Colores              → Frases de ejemplo, tarjetas, quiz, parejas y escucha
+        └── Números del 1 al 30  → Frases de ejemplo, tarjetas, quiz, escritura y escucha
 ```
 
 La página principal (`index.html`) es el menú: cabecera con el logotipo (un lápiz
@@ -34,9 +34,9 @@ assets/icon-180.png                         icono para móvil y tableta
 primaria/5/ingles/verbos-irregulares/       la actividad de inglés, completa
 primaria/5/frances/colores/                 los colores en francés
 primaria/5/frances/numeros/                 los números del 1 al 30 en francés
-primaria/5/frances/colores/assets/audio/    las grabaciones de los colores
-primaria/5/frances/numeros/assets/audio/    las grabaciones de los números
-primaria/5/frances/scripts/generate-audio.mjs  regenera esas grabaciones
+primaria/5/frances/colores/                 la actividad de colores: página, datos y audio
+primaria/5/frances/numeros/                 la actividad de números: página, datos y audio
+primaria/5/frances/scripts/generate-audio.mjs  regenera todas las grabaciones
 primaria/5/frances/verificar.mjs            comprobación de las dos actividades
 ```
 
@@ -88,20 +88,30 @@ Las dos son una página autocontenida (`index.html` con su CSS y su JavaScript d
 tienen la misma estructura: una cabecera con el enlace de vuelta al menú, el progreso
 (estrellas y mejor racha) y cuatro modos.
 
-- **Colores** (`primaria/5/frances/colores/`): los once colores básicos con su color real
-  y su traducción. Tarjetas para mirar y escuchar, quiz de diez preguntas, parejas para
-  emparejar cada nombre con su color y escucha para reconocer el color de oído.
+Cada palabra lleva además **una frase corta que la usa en contexto**, con su traducción y
+su propia grabación: *Le camion est rouge* / *El camión es rojo*, *J'ai douze ans* / *Tengo
+doce años*. Las frases se ven en las tarjetas (colores) o en la lista de frases (números) y
+se repiten en la corrección del quiz y de la escritura, con su botón para volver a oírlas.
+
+- **Colores** (`primaria/5/frances/colores/`): los once colores básicos con su color real,
+  su traducción y su frase. Tarjetas para mirar y escuchar, quiz de diez preguntas, parejas
+  para emparejar cada nombre con su color y escucha para reconocer el color de oído.
 - **Números del 1 al 30** (`primaria/5/frances/numeros/`): los treinta números con su
   escritura (`dix-sept`, `vingt et un`, `vingt-deux`…), tarjetas, quiz de ida y vuelta
   (del número a la palabra y de la palabra al número), escritura con teclado y escucha.
   La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
 
+Los colores y las frases viven en el `datos.js` de cada actividad: es el fichero que carga
+la página y el que lee el generador de audio, así que el texto que se ve y lo que se oye no
+pueden separarse.
+
 El sonido son grabaciones MP3 incluidas en cada actividad, como en la actividad de
 inglés: se oyen sin conexión y suenan igual en cualquier equipo, sin depender de las voces
-del sistema. Voz `fr-FR-DeniseNeural` de Edge, algo más lenta de lo normal, convertida a
-mono 32 kbps con normalización de volumen y recorte de silencios. Si alguien copia la
-página sin la carpeta `assets`, el modo "Escucha" queda apagado y se avisa; las demás
-actividades siguen funcionando.
+del sistema. Son 82 clips (palabra y frase de cada color y cada número), con voz
+`fr-FR-DeniseNeural` de Edge, algo más lenta de lo normal, convertida a mono 32 kbps con
+normalización de volumen y recorte de silencios. Si alguien copia la página sin la carpeta
+`assets`, el modo "Escucha" queda apagado y se avisa; las demás actividades siguen
+funcionando.
 
 Para regenerar las grabaciones (necesita internet y `npm install`, una sola vez):
 
@@ -118,12 +128,13 @@ juega igual y no se guarda nada.
 
 Las dos actividades tienen una comprobación de navegador, sin dependencias (sólo necesita
 un Chromium instalado). Abre las tres páginas, juega a los modos, revisa las palabras y los
-enlaces, comprueba que cada tarjeta pide su grabación y que el MP3 se carga entero, mira
+enlaces, comprueba que cada palabra y cada frase piden su grabación y que el MP3 se carga
+entero, mira
 que nada desborde a 390 px y falla si algo lanza un error:
 
 ```bash
 cd primaria/5/frances
-node verificar.mjs                    # 91 comprobaciones
+node verificar.mjs                    # 101 comprobaciones
 node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
 ```
 

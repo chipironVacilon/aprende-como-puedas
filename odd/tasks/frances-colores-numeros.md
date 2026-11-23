@@ -32,6 +32,12 @@ S5. El menú del portal queda coherente: la tarjeta "Pronto" de Colores pasa a s
 S6. Igual que el resto de la web: se abre con doble clic en su `index.html`, sin servidor,
     sin conexión y sin instalar nada; se puede recorrer con teclado y se lee en el móvil.
 
+S7. Cada palabra lleva una **frase corta que la usa en contexto**, con su traducción al
+    español y su propia grabación MP3: "Le camion est rouge" / "El camión es rojo",
+    "J'ai douze ans" / "Tengo doce años". Las frases se ven en la actividad (tarjetas de
+    colores, lista de frases de números) y se repiten en la corrección del quiz y de la
+    escritura, con un botón para volver a escucharlas.
+
 ## Tasks
 
 | ID | Tarea | Specs | Ruta | Commit |
@@ -42,6 +48,7 @@ S6. Igual que el resto de la web: se abre con doble clic en su `index.html`, sin
 | T4 | Portal y README: dos enlaces reales, contador y árbol de contenidos | S5 | inline | 5dad2be |
 | T5 | Verificación en Chromium real: contenido, modos, móvil, sin errores | S1-S6 | inline | 48fab0b |
 | T6 | Grabar las 41 palabras en MP3, generador y páginas que reproducen los ficheros | S4, S6 | inline | 5364cb1 |
+| T7 | Datos compartidos (`datos.js`), frases de ejemplo grabadas y mostradas | S7 | inline | 7cdf635 |
 
 ## Log
 
@@ -116,3 +123,26 @@ L11 (rebanada): las grabaciones son binarios y el generador es una unidad funcio
 página que las reproduce; van en un commit (`5364cb1`), la comprobación en otro y la
 documentación en otro. La rama `feat/frances-colores-numeros` acumula siete commits; el push
 y el PR siguen siendo decisión del usuario.
+
+L12 (petición del usuario, literal):
+
+> Sí. Graba frases también
+
+L13 (decisión): las frases dejan de estar duplicadas entre la página y el generador siguiendo
+el patrón de la actividad de inglés (`verbs.js`): los datos pasan a
+`colores/datos.js` y `numeros/datos.js`, que la página carga con `<script src>` y el
+generador lee con `require`. Una frase por palabra, con la concordancia ya aplicada
+(*L'herbe est verte*, *La neige est blanche*) y alternando *J'ai…* / *Il y a…* en los
+números.
+
+L14 (evidencia, T7): 41 frases nuevas grabadas (82 clips en total, 0,27 MB de audio), cero
+errores. Duraciones medidas con `ffprobe`: «Le camion est rouge» 1,254 s, «La neige est
+blanche» 1,176 s, «J'ai un chat» 0,784 s, «J'ai vingt et un crayons» 1,202 s, «Il y a
+trente élèves» 1,176 s. La comprobación de navegador pasó de 91 a 101 comprobaciones y quedó
+verde tres veces: lee los mismos `datos.js`, comprueba los 82 ficheros, que cada frase se
+vea con su traducción, que pida el `<palabra>-phrase.mp3` correcto, que el MP3 se cargue y
+que la orden de `play()` llegue, y que la corrección del quiz y de la escritura repitan la
+frase.
+
+L15 (rebanadas): `7cdf635` datos compartidos + páginas + generador + 41 clips nuevos,
+`2dc1c7a` la comprobación, `e658f86` el README y este documento.
