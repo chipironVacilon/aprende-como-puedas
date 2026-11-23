@@ -32,6 +32,11 @@ S5. El menú del portal queda coherente: la tarjeta "Pronto" de Colores pasa a s
 S6. Igual que el resto de la web: se abre con doble clic en su `index.html`, sin servidor,
     sin conexión y sin instalar nada; se puede recorrer con teclado y se lee en el móvil.
 
+S8. Las frases sirven además **como ejercicio propio**: un modo "Frases" en cada actividad
+    suena una frase y pide elegir, entre cuatro, el color o el número que nombra; acierto y
+    error se explican y la corrección enseña la frase entera con su traducción. La ronda se
+    puede repetir y las frases cuentan para las estrellas como cualquier otra pregunta.
+
 S7. Cada palabra lleva una **frase corta que la usa en contexto**, con su traducción al
     español y su propia grabación MP3: "Le camion est rouge" / "El camión es rojo",
     "J'ai douze ans" / "Tengo doce años". Las frases se ven en la actividad (tarjetas de
@@ -49,6 +54,7 @@ S7. Cada palabra lleva una **frase corta que la usa en contexto**, con su traduc
 | T5 | Verificación en Chromium real: contenido, modos, móvil, sin errores | S1-S6 | inline | 48fab0b |
 | T6 | Grabar las 41 palabras en MP3, generador y páginas que reproducen los ficheros | S4, S6 | inline | 5364cb1 |
 | T7 | Datos compartidos (`datos.js`), frases de ejemplo grabadas y mostradas | S7 | inline | 7cdf635 |
+| T8 | Modo "Frases": escuchar la frase y elegir el color o el número que nombra | S8 | inline | — |
 
 ## Log
 
@@ -147,3 +153,22 @@ frase.
 L15 (rebanadas): `7cdf635` datos compartidos + páginas + generador + 41 clips nuevos,
 `2dc1c7a` la comprobación, y el commit `docs(frances): document the example
 sentences` con el README y este documento.
+
+L16 (petición del usuario, literal):
+
+> Sí. Que las frases sirvan como ejercicio
+
+L17 (decisión, T8): en vez de inventar una mecánica nueva, el quiz pasa de un booleano
+"escucha sí/no" a un modo (`quiz`, `listen`, `phrase`), que decide el tipo de ronda, la
+consigna, la grabación que suena al empezar y lo que se repite al responder. El modo
+"Frases" suena `<palabra>-phrase.mp3` y ofrece cuatro colores (con su muestra) o cuatro
+números, sin enseñar el texto hasta la corrección: es comprensión auditiva, no lectura.
+
+L18 (evidencia, T8): 117 comprobaciones de navegador, verdes tres veces seguidas. Las nuevas
+comprueban que el menú ofrece cinco modos, que la ronda pide `-phrase.mp3`, que suena al
+empezar, que hay cuatro opciones con la buena entre ellas, que las opciones de colores son
+muestras y las de números son cifras, que acertar se celebra, que la corrección enseña la
+frase entera y que "Otra ronda" sigue en el modo Frases.
+
+L19 (rebanadas): páginas + comprobación en el commit `feat(frances): make the example
+sentences a listening exercise`, y el README y este documento en el commit siguiente.

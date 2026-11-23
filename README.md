@@ -16,8 +16,8 @@ Primaria
     │                              escucha y adivina, escribe la palabra, arcade
     │                              del marcianito e invasores
     └── Francés
-        ├── Colores              → Frases de ejemplo, tarjetas, quiz, parejas y escucha
-        └── Números del 1 al 30  → Frases de ejemplo, tarjetas, quiz, escritura y escucha
+        ├── Colores              → Tarjetas, quiz, parejas, escucha y frases
+        └── Números del 1 al 30  → Tarjetas, quiz, escritura, escucha y frases
 ```
 
 La página principal (`index.html`) es el menú: cabecera con el logotipo (un lápiz
@@ -90,16 +90,19 @@ tienen la misma estructura: una cabecera con el enlace de vuelta al menú, el pr
 
 Cada palabra lleva además **una frase corta que la usa en contexto**, con su traducción y
 su propia grabación: *Le camion est rouge* / *El camión es rojo*, *J'ai douze ans* / *Tengo
-doce años*. Las frases se ven en las tarjetas (colores) o en la lista de frases (números) y
-se repiten en la corrección del quiz y de la escritura, con su botón para volver a oírlas.
+doce años*. Las frases se ven en las tarjetas (colores) o en la lista de frases (números), se
+repiten en la corrección del quiz y de la escritura con su botón para volver a oírlas, y
+tienen su propio modo: **Frases**, que suena una frase y pide elegir el color o el número
+que nombra.
 
 - **Colores** (`primaria/5/frances/colores/`): los once colores básicos con su color real,
   su traducción y su frase. Tarjetas para mirar y escuchar, quiz de diez preguntas, parejas
-  para emparejar cada nombre con su color y escucha para reconocer el color de oído.
+  para emparejar cada nombre con su color, escucha para reconocer el color de oído y frases
+  para entender el color dentro de una frase.
 - **Números del 1 al 30** (`primaria/5/frances/numeros/`): los treinta números con su
   escritura (`dix-sept`, `vingt et un`, `vingt-deux`…), tarjetas, quiz de ida y vuelta
-  (del número a la palabra y de la palabra al número), escritura con teclado y escucha.
-  La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
+  (del número a la palabra y de la palabra al número), escritura con teclado, escucha y
+  frases. La escritura acepta guiones, espacios o no ponerlos: cuenta la ortografía.
 
 Los colores y las frases viven en el `datos.js` de cada actividad: es el fichero que carga
 la página y el que lee el generador de audio, así que el texto que se ve y lo que se oye no
@@ -134,7 +137,7 @@ que nada desborde a 390 px y falla si algo lanza un error:
 
 ```bash
 cd primaria/5/frances
-node verificar.mjs                    # 101 comprobaciones
+node verificar.mjs                    # 117 comprobaciones
 node verificar.mjs --shots /tmp/fr   # además guarda capturas para mirarlas
 ```
 
