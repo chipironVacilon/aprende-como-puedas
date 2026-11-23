@@ -6,16 +6,18 @@
  *
  * It boots headless Chromium through the DevTools protocol, with no test
  * framework and no npm install, and checks the content and the game flow of
- * both pages plus the portal links. Before each page loads it injects a fake
- * French voice, so the "Escucha" mode can be played without speakers; at the
- * end it reloads the colours page without that voice and checks the fallback.
+ * both pages plus the portal links. The recordings are real MP3 files, so it
+ * checks that every clip exists, that the right one is requested when a word
+ * is tapped, and that the browser actually starts playing it. At the end it
+ * opens a copy of the colours page without its assets folder and checks the
+ * no-sound fallback.
  *
  * --shots saves PNG screenshots so a human can eyeball the design.
  */
 import { spawn } from "node:child_process";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdtemp, mkdir, writeFile, copyFile, rm } from "node:fs/promises";
+import { existsSync, statSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -63,29 +65,20 @@ const check = (condition, label, detail) => {
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
-const VOICE_STUB = `
+// Headless Chromium in this machine has no audio output, so sound cannot be
+// heard: the check records the play() orders and verifies the MP3 is loaded and
+// decodable, which is what the page is responsible for.
+const PLAY_RECORDER = `
 (() => {
-  const voices = [{ name: "Français (prueba)", lang: "fr-FR", default: true, localService: true, voiceURI: "stub:fr" }];
-  const spoken = [];
-  window.__spoken = spoken;
-  const synth = {
-    speaking: false,
-    pending: false,
-    paused: false,
-    getVoices: () => voices,
-    speak: (utterance) => { spoken.push({ text: utterance.text, lang: utterance.lang }); },
-    cancel: () => {},
-    pause: () => {},
-    resume: () => {},
-    addEventListener: (type, handler) => { if (type === "voiceschanged") setTimeout(handler, 0); },
-    removeEventListener: () => {}
-  };
-  Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true, writable: true });
-  window.SpeechSynthesisUtterance = function (text) {
-    this.text = text;
-    this.lang = "";
-    this.voice = null;
-    this.rate = 1;
+  window.__plays = [];
+  const original = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () {
+    window.__plays.push(this.src);
+    try {
+      return original.apply(this, arguments) || Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
   };
 })();
 `;
@@ -101,9 +94,9 @@ const CHROME_CANDIDATES = [
 const chromePath = CHROME_CANDIDATES.find((candidate) => existsSync(candidate));
 if (!chromePath) throw new Error("No Chromium found (set CHROME_PATH)");
 
-async function boot(withVoice) {
+async function boot() {
   const profile = await mkdtemp(join(tmpdir(), "frances-check-"));
-  const port = 9500 + (process.pid % 300) + (withVoice ? 0 : 40);
+  const port = 9500 + (process.pid % 300);
   const chrome = spawn(
     chromePath,
     [
@@ -247,7 +240,7 @@ async function boot(withVoice) {
 
   await send("Page.enable");
   await send("Runtime.enable");
-  if (withVoice) await send("Page.addScriptToEvaluateOnNewDocument", { source: VOICE_STUB });
+  await send("Page.addScriptToEvaluateOnNewDocument", { source: PLAY_RECORDER });
   await viewport(900, 1250);
 
   return {
@@ -265,6 +258,45 @@ async function boot(withVoice) {
       chrome.kill("SIGKILL");
     }
   };
+}
+
+/* ----------------------------------------------------------------- audio ---- */
+
+const slug = (word) => word.replace(/\s+/g, "-");
+const clipPath = (activity, word) => join(here, activity, "assets/audio", `${slug(word)}.mp3`);
+
+const READ_AUDIO = `(() => {
+  const audio = document.getElementById("audio");
+  return audio ? {
+    src: audio.src,
+    currentTime: audio.currentTime,
+    paused: audio.paused,
+    readyState: audio.readyState,
+    duration: audio.duration
+  } : null;
+})()`;
+
+async function playedClip(api, activity, word) {
+  const expected = `/${activity}/assets/audio/${slug(word)}.mp3`;
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const state = await api.evaluate(`(() => ({
+      audio: ${READ_AUDIO.trim()},
+      plays: window.__plays.slice(-3)
+    }))()`);
+    const loaded = state.audio && state.audio.readyState >= 3 && state.audio.src.endsWith(expected);
+    const ordered = state.plays.some((entry) => entry.endsWith(expected));
+    if (loaded && ordered) return { ...state.audio, ordered: true };
+    await sleep(100);
+  }
+  const state = await api.evaluate(`(() => ({ audio: ${READ_AUDIO.trim()}, plays: window.__plays.slice(-3) }))()`);
+  return { ...(state.audio || {}), ordered: false, plays: state.plays };
+}
+
+function clipsPresent(activity, words) {
+  return words.filter((word) => {
+    const file = clipPath(activity, word);
+    return !existsSync(file) || statSync(file).size < 800;
+  });
 }
 
 /* ---------------------------------------------------------------- colors ---- */
@@ -351,9 +383,29 @@ async function colors(api) {
   );
   await api.shot("colores-02-tarjetas");
 
+  check(
+    clipsPresent("colores", COLORS.map((color) => color.fr)).length === 0,
+    "colores: existen las once grabaciones",
+    clipsPresent("colores", COLORS.map((color) => color.fr)).join(",")
+  );
+
   await api.click('.color-card[data-say="rouge"]');
-  const spoken = await api.evaluate("window.__spoken.map((item) => item.text)");
-  check(spoken.includes("rouge"), "colores: la tarjeta se puede escuchar", JSON.stringify(spoken));
+  const rouge = await playedClip(api, "colores", "rouge");
+  check(
+    Boolean(rouge) && rouge.src.endsWith("/colores/assets/audio/rouge.mp3"),
+    "colores: la tarjeta de «rouge» pide su grabación",
+    JSON.stringify(rouge)
+  );
+  check(
+    Boolean(rouge) && rouge.readyState >= 3 && rouge.duration > 0.2,
+    "colores: la grabación de «rouge» se carga entera",
+    JSON.stringify(rouge)
+  );
+  check(
+    Boolean(rouge) && rouge.ordered,
+    "colores: el navegador recibe la orden de reproducir «rouge»",
+    JSON.stringify(rouge)
+  );
 
   // Two quiz rounds: one right, one wrong, both with their correction.
   await api.click('[data-action="home"]');
@@ -466,11 +518,16 @@ async function colors(api) {
     "escucha: la consigna es clara",
     listenRound.question
   );
-  const spokenNow = await api.evaluate("window.__spoken.map((item) => item.text)");
+  const heard = await playedClip(api, "colores", listenRound.say);
   check(
-    spokenNow[spokenNow.length - 1] === listenRound.say,
-    "escucha: el color suena al empezar",
-    JSON.stringify(spokenNow.slice(-2))
+    Boolean(heard) && heard.src.endsWith(`/colores/assets/audio/${slug(listenRound.say)}.mp3`),
+    "escucha: suena la grabación del color preguntado",
+    JSON.stringify(heard)
+  );
+  check(
+    Boolean(heard) && heard.ordered && heard.readyState >= 3,
+    "escucha: la grabación arranca sola al empezar",
+    JSON.stringify(heard)
   );
   await api.click(`.option[data-value="${listenRound.say}"]`);
   check(
@@ -545,10 +602,28 @@ async function numbers(api) {
   check(study.tricks === 4, "números: hay trucos de escritura", `${study.tricks}`);
   await api.shot("numeros-02-tarjetas");
 
-  await api.click('.number-card[data-say="dix-sept"]');
   check(
-    (await api.evaluate("window.__spoken.map((item) => item.text)")).includes("dix-sept"),
-    "números: la tarjeta del 17 se puede escuchar"
+    clipsPresent("numeros", Object.values(WORDS)).length === 0,
+    "números: existen las treinta grabaciones",
+    clipsPresent("numeros", Object.values(WORDS)).join(",")
+  );
+
+  await api.click('.number-card[data-say="dix-sept"]');
+  const seventeen = await playedClip(api, "numeros", "dix-sept");
+  check(
+    Boolean(seventeen) && seventeen.src.endsWith("/numeros/assets/audio/dix-sept.mp3"),
+    "números: la tarjeta del 17 pide su grabación",
+    JSON.stringify(seventeen)
+  );
+  check(
+    Boolean(seventeen) && seventeen.readyState >= 3 && seventeen.duration > 0.2,
+    "números: la grabación del 17 se carga entera",
+    JSON.stringify(seventeen)
+  );
+  check(
+    Boolean(seventeen) && seventeen.ordered,
+    "números: el navegador recibe la orden de reproducir «dix-sept»",
+    JSON.stringify(seventeen)
   );
 
   // Quiz in both directions: one right, one wrong.
@@ -633,6 +708,12 @@ async function numbers(api) {
   await api.waitFor("!!document.querySelector('[data-action=speak]')", "el modo escucha de números arranca");
   const listenRound = await api.evaluate(READ_NUMBER_ROUND);
   check(listenRound.say, "escucha: hay un número que suena", JSON.stringify(listenRound));
+  const heardNumber = await playedClip(api, "numeros", listenRound.say);
+  check(
+    Boolean(heardNumber) && heardNumber.src.endsWith(`/numeros/assets/audio/${slug(listenRound.say)}.mp3`),
+    "escucha: suena la grabación del número preguntado",
+    JSON.stringify(heardNumber)
+  );
   await api.click(`.option[data-value="${listenRound.say}"]`);
   check(
     /¡Bien!/.test((await api.evaluate(READ_FEEDBACK)).message || ""),
@@ -725,32 +806,41 @@ async function mobile(api) {
   await api.shot("numeros-movil-tarjetas");
 }
 
-/* -------------------------------------------------------- sin voz en el equipo ---- */
+/* ------------------------------------------------------- sin grabaciones ---- */
 
-async function withoutVoice() {
-  const api = await boot(false);
+async function withoutClips() {
+  const api = await boot();
   try {
-    await api.goto(PAGES.colores, "document.querySelectorAll('.mode').length === 4");
+    // A copy without its assets folder: the fallback is what a half-copied
+    // activity looks like. Chromium (snap) cannot read /tmp or hidden folders
+    // in $HOME, so use a plain folder there and remove it afterwards.
+    const scratch = await mkdtemp(join(homedir(), "frances-sin-audio-"));
+    await copyFile(join(here, "colores/index.html"), join(scratch, "index.html"));
+    await api.goto(`file://${join(scratch, "index.html")}`, "document.querySelectorAll('.mode').length === 4");
+
     const state = await api.evaluate(`(() => ({
       disabled: document.querySelector(".mode--listen").disabled,
       banner: !!document.querySelector(".banner"),
-      footnote: document.getElementById("footnote").textContent.trim()
+      footnote: document.getElementById("footnote").textContent.trim(),
+      cards: document.querySelectorAll(".color-card").length
     }))()`);
-    check(state.disabled, "sin voz: el modo Escucha queda apagado", JSON.stringify(state));
-    check(state.banner, "sin voz: se avisa en el menú", JSON.stringify(state));
-    check(/voz en francés/i.test(state.footnote), "sin voz: la nota lo explica", state.footnote);
+    check(state.disabled, "sin grabaciones: el modo Escucha queda apagado", JSON.stringify(state));
+    check(state.banner, "sin grabaciones: se avisa en el menú", JSON.stringify(state));
+    check(/grabaciones/i.test(state.footnote), "sin grabaciones: la nota lo explica", state.footnote);
+    check(state.cards === 0, "sin grabaciones: el menú se dibuja sin tarjetas de colores");
 
     await api.click('[data-action="study"]');
     await api.click('.color-card[data-say="bleu"]');
     check(
       (await api.evaluate("document.querySelectorAll('.color-card').length")) === 11,
-      "sin voz: las tarjetas siguen funcionando"
+      "sin grabaciones: las tarjetas siguen funcionando"
     );
 
     await api.click('[data-action="home"]');
     await api.click('[data-action="quiz"]');
-    await api.waitFor("!!document.querySelector('.option')", "el quiz funciona sin voz");
-    check(api.consoleErrors.length === 0, "sin voz: ningún error de consola", JSON.stringify(api.consoleErrors.slice(0, 3)));
+    await api.waitFor("!!document.querySelector('.option')", "el quiz funciona sin grabaciones");
+    check(api.consoleErrors.length === 0, "sin grabaciones: ningún error de consola", JSON.stringify(api.consoleErrors.slice(0, 3)));
+    await rm(scratch, { recursive: true, force: true });
   } finally {
     api.close();
   }
@@ -758,7 +848,7 @@ async function withoutVoice() {
 
 /* ------------------------------------------------------------------ main ---- */
 
-const api = await boot(true);
+const api = await boot();
 try {
   await colors(api);
   await numbers(api);
@@ -773,7 +863,7 @@ try {
   api.close();
 }
 
-await withoutVoice();
+await withoutClips();
 
 if (shotsDir) console.log(`\nCapturas en ${shotsDir}`);
 console.log(`\n${passes.length} comprobaciones OK`);
