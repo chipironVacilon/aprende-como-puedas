@@ -20,32 +20,18 @@ import { existsSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
 
-const COLORS = [
-  { fr: "rouge", es: "rojo" },
-  { fr: "bleu", es: "azul" },
-  { fr: "vert", es: "verde" },
-  { fr: "jaune", es: "amarillo" },
-  { fr: "orange", es: "naranja" },
-  { fr: "violet", es: "violeta" },
-  { fr: "rose", es: "rosa" },
-  { fr: "marron", es: "marrón" },
-  { fr: "gris", es: "gris" },
-  { fr: "noir", es: "negro" },
-  { fr: "blanc", es: "blanco" }
-];
-
-const WORDS = {
-  1: "un", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six", 7: "sept",
-  8: "huit", 9: "neuf", 10: "dix", 11: "onze", 12: "douze", 13: "treize",
-  14: "quatorze", 15: "quinze", 16: "seize", 17: "dix-sept", 18: "dix-huit",
-  19: "dix-neuf", 20: "vingt", 21: "vingt et un", 22: "vingt-deux",
-  23: "vingt-trois", 24: "vingt-quatre", 25: "vingt-cinq", 26: "vingt-six",
-  27: "vingt-sept", 28: "vingt-huit", 29: "vingt-neuf", 30: "trente"
-};
+const requireFrom = createRequire(import.meta.url);
+const COLORS = requireFrom("./colores/datos.js");
+const NUMBERS = requireFrom("./numeros/datos.js");
+const WORDS = Object.fromEntries(NUMBERS.map((item) => [item.n, item.fr]));
+const PHRASE_BY_WORD = Object.fromEntries(
+  [...COLORS, ...NUMBERS].map((item) => [item.fr, item.phrase])
+);
 
 const PAGES = {
   colores: `file://${join(here, "colores/index.html")}`,
@@ -263,7 +249,8 @@ async function boot() {
 /* ----------------------------------------------------------------- audio ---- */
 
 const slug = (word) => word.replace(/\s+/g, "-");
-const clipPath = (activity, word) => join(here, activity, "assets/audio", `${slug(word)}.mp3`);
+const clipPath = (activity, file) => join(here, activity, "assets/audio", file);
+const clipFiles = (word) => [`${slug(word)}.mp3`, `${slug(word)}-phrase.mp3`];
 
 const READ_AUDIO = `(() => {
   const audio = document.getElementById("audio");
@@ -276,8 +263,8 @@ const READ_AUDIO = `(() => {
   } : null;
 })()`;
 
-async function playedClip(api, activity, word) {
-  const expected = `/${activity}/assets/audio/${slug(word)}.mp3`;
+async function playedClip(api, activity, word, suffix = "") {
+  const expected = `/${activity}/assets/audio/${slug(word)}${suffix}.mp3`;
   for (let attempt = 0; attempt < 60; attempt += 1) {
     const state = await api.evaluate(`(() => ({
       audio: ${READ_AUDIO.trim()},
@@ -293,10 +280,14 @@ async function playedClip(api, activity, word) {
 }
 
 function clipsPresent(activity, words) {
-  return words.filter((word) => {
-    const file = clipPath(activity, word);
-    return !existsSync(file) || statSync(file).size < 800;
-  });
+  const missing = [];
+  for (const word of words) {
+    for (const file of clipFiles(word)) {
+      const full = clipPath(activity, file);
+      if (!existsSync(full) || statSync(full).size < 800) missing.push(file);
+    }
+  }
+  return missing;
 }
 
 /* ---------------------------------------------------------------- colors ---- */
@@ -385,11 +376,32 @@ async function colors(api) {
 
   check(
     clipsPresent("colores", COLORS.map((color) => color.fr)).length === 0,
-    "colores: existen las once grabaciones",
+    "colores: existen las 22 grabaciones (palabras y frases)",
     clipsPresent("colores", COLORS.map((color) => color.fr)).join(",")
   );
 
-  await api.click('.color-card[data-say="rouge"]');
+  const sentence = COLORS.find((color) => color.fr === "rouge").phrase;
+  const shownSentence = await api.text('.phrase[data-say="rouge"]');
+  check(
+    shownSentence.includes(sentence.fr) && shownSentence.includes(sentence.es),
+    "colores: la tarjeta enseña la frase y su traducción",
+    shownSentence
+  );
+
+  await api.click('.phrase[data-say="rouge"]');
+  const sentenceClip = await playedClip(api, "colores", "rouge", "-phrase");
+  check(
+    Boolean(sentenceClip) && sentenceClip.src.endsWith("/colores/assets/audio/rouge-phrase.mp3"),
+    "colores: la frase de «rouge» pide su grabación",
+    JSON.stringify(sentenceClip)
+  );
+  check(
+    Boolean(sentenceClip) && sentenceClip.readyState >= 3 && sentenceClip.ordered,
+    "colores: la grabación de la frase se carga y recibe la orden",
+    JSON.stringify(sentenceClip)
+  );
+
+  await api.click('.color-card__main[data-say="rouge"]');
   const rouge = await playedClip(api, "colores", "rouge");
   check(
     Boolean(rouge) && rouge.src.endsWith("/colores/assets/audio/rouge.mp3"),
@@ -430,6 +442,24 @@ async function colors(api) {
   check(
     (await api.evaluate("document.getElementById('stat-stars').textContent")) === "1",
     "colores: un acierto da una estrella"
+  );
+
+  const targetSentence = COLORS.find((color) => color.fr === target).phrase;
+  const shownInFeedback = await api.text(".feedback__phrase");
+  check(
+    Boolean(shownInFeedback) &&
+      shownInFeedback.includes(targetSentence.fr) &&
+      shownInFeedback.includes(targetSentence.es),
+    "colores: la corrección trae la frase de ejemplo",
+    shownInFeedback
+  );
+
+  await api.click('[data-action="speak"][data-kind="phrase"]');
+  const replay = await playedClip(api, "colores", target, "-phrase");
+  check(
+    Boolean(replay) && replay.src.endsWith(`/colores/assets/audio/${slug(target)}-phrase.mp3`),
+    "colores: la frase se puede volver a escuchar desde la corrección",
+    JSON.stringify(replay)
   );
 
   await api.click('[data-action="next"]');
@@ -604,8 +634,31 @@ async function numbers(api) {
 
   check(
     clipsPresent("numeros", Object.values(WORDS)).length === 0,
-    "números: existen las treinta grabaciones",
+    "números: existen las 60 grabaciones (palabras y frases)",
     clipsPresent("numeros", Object.values(WORDS)).join(",")
+  );
+
+  const rows = await api.evaluate(`(() => [...document.querySelectorAll(".phrase-row")].map((node) => ({
+    say: node.dataset.say,
+    kind: node.dataset.kind,
+    text: node.textContent.replace(/\\s+/g, " ").trim()
+  })))()`);
+  check(rows.length === 30, "números: hay 30 frases de ejemplo", `${rows.length}`);
+  check(
+    rows.every((row) => row.kind === "phrase" && row.text.includes(PHRASE_BY_WORD[row.say].fr)),
+    "números: cada frase aparece con su número",
+    JSON.stringify(rows.filter((row) => !row.text.includes(PHRASE_BY_WORD[row.say]?.fr ?? "?")))
+  );
+
+  await api.click('.phrase-row[data-say="dix-sept"]');
+  const numberSentence = await playedClip(api, "numeros", "dix-sept", "-phrase");
+  check(
+    Boolean(numberSentence) &&
+      numberSentence.src.endsWith("/numeros/assets/audio/dix-sept-phrase.mp3") &&
+      numberSentence.readyState >= 3 &&
+      numberSentence.ordered,
+    "números: la frase del 17 se carga y recibe la orden",
+    JSON.stringify(numberSentence)
   );
 
   await api.click('.number-card[data-say="dix-sept"]');
@@ -641,6 +694,12 @@ async function numbers(api) {
   const right = await api.evaluate(READ_FEEDBACK);
   check(right.tone === "ok", "números: el acierto se marca bien", right.tone);
   check(right.blocked && right.next, "números: tras responder se bloquea y se puede seguir");
+  check(
+    Boolean(await api.text(".feedback__phrase")) &&
+      (await api.text(".feedback__phrase")).includes(PHRASE_BY_WORD[target].fr),
+    "números: la corrección trae la frase de ejemplo",
+    await api.text(".feedback__phrase")
+  );
 
   await api.click('[data-action="next"]');
   const second = await api.evaluate(READ_NUMBER_ROUND);
@@ -666,6 +725,11 @@ async function numbers(api) {
   const failed = await api.evaluate(READ_FEEDBACK);
   check(failed.tone === "bad", "escribir: un fallo se avisa", failed.tone);
   check((failed.message || "").includes(expected), "escribir: el fallo enseña la palabra", failed.message);
+  check(
+    (await api.text(".feedback__phrase") || "").includes(PHRASE_BY_WORD[expected].fr),
+    "escribir: la corrección trae la frase de ejemplo",
+    await api.text(".feedback__phrase")
+  );
   check(
     (await api.evaluate("document.getElementById('write-input').disabled")) === true,
     "escribir: tras comprobar el campo queda bloqueado"
@@ -804,6 +868,10 @@ async function mobile(api) {
   check(grid.scroll <= grid.width + 1, "números en móvil: la rejilla no desborda", JSON.stringify(grid));
   check(grid.columns >= 3, "números en móvil: la rejilla usa varias columnas", JSON.stringify(grid));
   await api.shot("numeros-movil-tarjetas");
+
+  await api.evaluate(`(() => { document.querySelector(".phrases-card").scrollIntoView(); return true; })()`);
+  await sleep(150);
+  await api.shot("numeros-movil-frases");
 }
 
 /* ------------------------------------------------------- sin grabaciones ---- */
@@ -816,6 +884,7 @@ async function withoutClips() {
     // in $HOME, so use a plain folder there and remove it afterwards.
     const scratch = await mkdtemp(join(homedir(), "frances-sin-audio-"));
     await copyFile(join(here, "colores/index.html"), join(scratch, "index.html"));
+    await copyFile(join(here, "colores/datos.js"), join(scratch, "datos.js"));
     await api.goto(`file://${join(scratch, "index.html")}`, "document.querySelectorAll('.mode').length === 4");
 
     const state = await api.evaluate(`(() => ({
@@ -830,7 +899,7 @@ async function withoutClips() {
     check(state.cards === 0, "sin grabaciones: el menú se dibuja sin tarjetas de colores");
 
     await api.click('[data-action="study"]');
-    await api.click('.color-card[data-say="bleu"]');
+    await api.click('.color-card__main[data-say="bleu"]');
     check(
       (await api.evaluate("document.querySelectorAll('.color-card').length")) === 11,
       "sin grabaciones: las tarjetas siguen funcionando"
