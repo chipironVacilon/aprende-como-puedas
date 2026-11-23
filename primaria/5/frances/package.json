@@ -1,0 +1,16 @@
+{
+  "name": "frances-actividades",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Herramientas de las actividades de francés: las palabras y sus grabaciones.",
+  "scripts": {
+    "audio": "node scripts/generate-audio.mjs",
+    "test": "node verificar.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "msedge-tts": "^2.1.1"
+  }
+}

@@ -521,6 +521,8 @@
 
   <main id="view" class="view" tabindex="-1"></main>
 
+  <audio id="audio" preload="auto"></audio>
+
   <p class="footnote" id="footnote"></p>
 </div>
 
@@ -544,6 +546,7 @@
   ];
 
   const KEY = "acp.frances.colores";
+  const PROBE_WORD = COLORS[0].fr;
   const QUIZ_LENGTH = 10;
   const PAIRS = 6;
 
@@ -583,64 +586,58 @@
     streakEl.textContent = profile.best;
   }
 
-  /* ---------- voz ---------- */
+  /* ---------- sonido ---------- */
 
-  const Speech = {
-    supported:
-      typeof window.speechSynthesis !== "undefined" &&
-      typeof window.SpeechSynthesisUtterance === "function",
-    voices: [],
+  // Un solo reproductor para todas las grabaciones de la actividad.
+  const Sonido = {
+    element: document.getElementById("audio"),
+    // null = todavía no sabemos si las grabaciones están; false = faltan.
+    available: null,
 
-    init() {
-      if (!this.supported) {
-        paintNote();
-        return;
+    slug(word) {
+      return word.replace(/\s+/g, "-");
+    },
+
+    play(word) {
+      const element = this.element;
+      element.pause();
+      element.src = `assets/audio/${this.slug(word)}.mp3`;
+      try {
+        element.currentTime = 0;
+      } catch (error) {
+        // Algunos navegadores no dejan fijar el tiempo antes de cargar.
       }
-      const load = () => {
-        this.voices = window.speechSynthesis.getVoices() || [];
-        paintNote();
-        if (state.screen === "home") renderHome();
-      };
-      load();
-      window.speechSynthesis.addEventListener("voiceschanged", load);
-    },
-
-    frenchVoice() {
-      return this.voices.find((voice) => /^fr([-_]|$)/i.test(voice.lang)) || null;
-    },
-
-    canListen() {
-      return this.supported && Boolean(this.frenchVoice());
-    },
-
-    say(text) {
-      if (!this.supported) return false;
-      const voice = this.frenchVoice();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = voice ? voice.lang : "fr-FR";
-      if (voice) utterance.voice = voice;
-      utterance.rate = 0.85;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
+      const playing = element.play();
+      if (playing && typeof playing.catch === "function") playing.catch(() => {});
       return true;
+    },
+
+    // Una sola grabación de prueba dice si la carpeta assets está en su sitio.
+    check(firstWord, onResult) {
+      const probe = new Audio(`assets/audio/${this.slug(firstWord)}.mp3`);
+      probe.preload = "auto";
+      probe.addEventListener("loadedmetadata", () => onResult(true), { once: true });
+      probe.addEventListener("error", () => onResult(false), { once: true });
     }
   };
 
+  function initSound() {
+    Sonido.check(PROBE_WORD, (available) => {
+      Sonido.available = available;
+      paintNote();
+      if (state.screen === "home") renderHome();
+    });
+  }
+
   function paintNote() {
-    if (!Speech.supported) {
+    if (Sonido.available === false) {
       footnote.textContent =
-        "Este navegador no puede leer en voz alta: las actividades funcionan sin sonido. " +
-        "El resto de la web tampoco necesita conexión.";
-      return;
-    }
-    if (!Speech.frenchVoice()) {
-      footnote.textContent =
-        "Tu equipo todavía no tiene una voz en francés, así que no hay sonido. " +
-        "Las actividades funcionan igual; si añades una voz en francés al sistema, se activa sola.";
+        "No encontramos las grabaciones (¿está la carpeta assets junto a index.html?). " +
+        "Las actividades funcionan igual, pero sin sonido.";
       return;
     }
     footnote.textContent =
-      "El sonido usa la voz francesa del navegador: no hace falta conexión. " +
+      "El sonido usa grabaciones incluidas con la actividad: no hace falta conexión. " +
       "Toca una tarjeta para volver a escucharla.";
   }
 
@@ -696,7 +693,7 @@
   }
 
   function homeHtml() {
-    const canListen = Speech.canListen();
+    const canListen = Sonido.available !== false;
     return `
       <section class="hero">
         <p class="eyebrow">Francés · 5º de Primaria</p>
@@ -707,14 +704,14 @@
       ${canListen ? "" : `
       <div class="banner" role="status">
         <span aria-hidden="true">🔈</span>
-        <span>Las actividades funcionan sin sonido. Para escuchar hace falta una
-          <b>voz en francés</b> en el navegador; si no la hay, "Escucha" queda apagado.</span>
+        <span>No encontramos las grabaciones de esta actividad: se puede jugar a todo
+          menos a <b>Escucha</b>. Copia la carpeta <b>assets</b> junto a index.html.</span>
       </div>`}
       <div class="modes">
         ${modeCard("study", "🃏", "Tarjetas", "Los once colores con su nombre en francés")}
         ${modeCard("quiz", "⚡", "Quiz", "Diez preguntas para elegir el color correcto")}
         ${modeCard("memory", "🧩", "Parejas", "Empareja cada nombre con su color")}
-        ${modeCard("listen", "🎧", "Escucha", canListen ? "Oye el color en francés y encuéntralo" : "Necesita una voz en francés en este equipo", !canListen)}
+        ${modeCard("listen", "🎧", "Escucha", canListen ? "Oye el color en francés y encuéntralo" : "Faltan las grabaciones de esta actividad", !canListen)}
       </div>`;
   }
 
@@ -724,9 +721,7 @@
         <button class="back" data-action="home">← Menú</button>
         <h1 tabindex="-1">Tarjetas</h1>
       </div>
-      <p class="lead">${Speech.canListen()
-        ? "Toca una tarjeta para escuchar cómo se dice."
-        : "Los once colores con su nombre en francés y su traducción."}</p>
+      <p class="lead">Toca una tarjeta para escuchar cómo se dice.</p>
       <div class="colors-grid">
         ${COLORS.map((color) => `
           <button class="color-card" data-action="speak" data-say="${color.fr}"
@@ -763,7 +758,7 @@
       round: newRound(listen)
     };
     renderQuiz({ focus: state.quiz.listen ? "[data-action='speak']" : ".option" });
-    if (listen) Speech.say(state.quiz.round.target.fr);
+    if (listen) Sonido.play(state.quiz.round.target.fr);
   }
 
   function promptHtml(round, listen) {
@@ -863,7 +858,7 @@
     } else {
       quiz.streak = 0;
     }
-    if (quiz.listen) Speech.say(quiz.round.target.fr);
+    if (quiz.listen) Sonido.play(quiz.round.target.fr);
     renderQuiz({ focus: "[data-action='next']" });
   }
 
@@ -880,7 +875,7 @@
     quiz.chosen = null;
     quiz.round = newRound(quiz.listen);
     renderQuiz({ focus: quiz.listen ? "[data-action='speak']" : ".option" });
-    if (quiz.listen) Speech.say(quiz.round.target.fr);
+    if (quiz.listen) Sonido.play(quiz.round.target.fr);
   }
 
   function summaryHtml() {
@@ -1013,7 +1008,7 @@
       game.done.add(game.open[1]);
       game.open = [];
       game.announce = `¡Pareja! ${first.key} es ${first.color.es}.`;
-      Speech.say(first.key);
+      Sonido.play(first.key);
       if (game.done.size === game.cards.length) {
         game.finished = true;
         game.earned = game.moves <= 8 ? 3 : game.moves <= 11 ? 2 : 1;
@@ -1066,13 +1061,13 @@
     if (action === "again") return startQuiz(trigger.dataset.mode === "listen");
     if (action === "flip") return flip(Number(trigger.dataset.index));
     if (action === "speak") {
-      Speech.say(trigger.dataset.say);
+      Sonido.play(trigger.dataset.say);
       return;
     }
   });
 
   paintStats();
-  Speech.init();
+  initSound();
   renderScreen(homeHtml(), "h1");
 })();
 </script>
