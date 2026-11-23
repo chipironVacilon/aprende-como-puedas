@@ -38,7 +38,7 @@ S6. Igual que el resto de la web: se abre con doble clic en su `index.html`, sin
 | T2 | Actividad "Colores" en `primaria/5/frances/colores/index.html` | S1, S3, S4, S6 | inline | 29fe212 |
 | T3 | Actividad "Números 1-30" en `primaria/5/frances/numeros/index.html` | S2, S3, S4, S6 | inline | 687942e |
 | T4 | Portal y README: dos enlaces reales, contador y árbol de contenidos | S5 | inline | 5dad2be |
-| T5 | Verificación en Chromium real: contenido, modos, teclado, móvil, sin errores | S1-S6 | inline | — (script de /tmp, no se versiona) |
+| T5 | Verificación en Chromium real: contenido, modos, móvil, sin errores | S1-S6 | inline | 48fab0b |
 
 ## Log
 
@@ -85,3 +85,9 @@ que lo decide el usuario.
 L7 (evidencia, commits): T2 → `29fe212`; T3 → `687942e`; T4 → `5dad2be`; este documento en
 el commit siguiente. La verificación T5 no se versiona: el script vive en `/tmp` porque
 necesita un Chromium y no aporta nada al repositorio estático.
+
+L8 (decisión, corregida): el script de verificación de L5 sí se versiona, en
+`primaria/5/frances/verificar.mjs`: sin él, que un número o una palabra se rompa no lo
+detectaría nada (riesgo 6). Se recortó a la parte que importa —contenido, quiz en los dos
+sentidos, escritura tolerante, parejas, escucha con voz inyectada, portal, 390 px y el caso
+sin voz— y se ejecutó tres veces seguidas: «82 comprobaciones OK / Todo verde» las tres.
